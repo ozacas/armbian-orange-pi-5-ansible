@@ -18,5 +18,5 @@
 - name: Install input remapper
   apt:
     deb: /root/input-remapper-1.5.0.deb
-  when  
+  when:
     - "ok_install is failed"
