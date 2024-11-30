@@ -1,0 +1,57 @@
+---
+
+- name: ensure dmidecode is present to be able to identify hardware even on UEFI armbian installs
+  apt: name=dmidecode state=present
+
+- name: run dmidecode for detailed platform info
+  command: dmidecode 
+  register: dmidecode_output
+  become: yes
+
+# TODO FIXME... probably could use ansible_facts for this
+- name: run programs to get key information about target system
+  block:
+    - name: get OS release
+      command: /etc/os-release
+      register: os_release
+      become: no
+    - name: get kernel info
+      command: uname -a
+      become: no
+      register: kernel_info      
+    - set_fact:
+        is_armbian: "{{ 'armbian' in os_release.stdout|lower }}"
+    - name: get board info from armbian.txt
+      shell: grep '^Board' /etc/armbian.txt 
+      become: no
+      register: board_info
+      when: 
+        - is_armbian  # file wont exist on other distros
+    - delegate_to: localhost
+      shell: grep -e '^\s*Platform\s+Name\s*:\s*Orange Pi 5$' | wc -l
+      args:
+        stdin: "{{dmidecode.stdout}}"
+      register: opi5_hits
+      ignore_errors: yes # we check below
+
+- name: set facts for target system
+  set_fact:
+    is_kernel_vendor: "{{ '-vendor-' in kernel_info.stdout }}"
+    is_kernel_edge: "{{ '-edge-' in kernel_info.stdout }}"
+    is_sbc_rk35xx: "{{ 'rk35xx' in kernel_info.stdout|lower }}"
+    is_sbc_opi5_plus: "{{ 'opi5-plus' in board_info.stdout|lower or 'Orange Pi 5 Plus' in dmidecode_output.stdout|lower }}"
+    # must be careful with matching dmidecode_output correctly for this SBC since it may accidentally match a 5+
+    is_sbc_opi5: "{{ ('opi5' in board_info.stdout|lower and not 'opi5-' in board_info.stdout|lower) or (opi5_hits is success and opi5_hits.stdout != '0' }}"
+    is_sbc_nanopc_t6: "{{ 'nanopct6' in board_info.stdout|lower }}"
+    is_sbc_khadas_edge2: "{{ 'edge2' in board_info.stdout|lower }}"
+    is_sbc_rock_5b_plus: "{{ 'rock5b+' in board_info.stdout|lower }}"
+    is_uefi: "{{ 'uefi' in board_info.stdout|lower }}"
+
+- name: debug
+  debug: var="{{ hostvars[inventory_hostname] }}"
+
+- name: fail if not rk35xx
+  fail: msg="Not a supported SBC - must be rk3588 SBC"
+  when: 
+    - not is_armbian
+    - not (is_sbc_opi5 or is_sbc_opi5_plus)
