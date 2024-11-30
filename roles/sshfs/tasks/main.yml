@@ -8,6 +8,8 @@
     path: "{{ ssh_fs_mount_directory }}"
     state: directory
     mode: '0755'
+  when:
+    - ssh_fs_mount_directory is defined
 
 - name: create directory /root/.ssh
   file:
@@ -21,7 +23,11 @@
   community.crypto.openssh_keypair:
     path: /root/.ssh/sshfs
     
-- name: Add fstab
+- name: Add fstab entry replacing an existing entry if need be, from previous run
   lineinfile:
     path: /etc/fstab
+    regexp: "^{{ssh_fs_mount_connection}}"
     line: "{{ ssh_fs_mount_connection }} {{ ssh_fs_mount_directory }} fuse.sshfs x-systemd.automount,_netdev,reconnect,identityfile=/root/.ssh/sshfs,allow_other,default_permissions 0 0"
+  when:
+    - ssh_fs_mount_directory is defined
+    - ssh_fs_mount_connection is defined

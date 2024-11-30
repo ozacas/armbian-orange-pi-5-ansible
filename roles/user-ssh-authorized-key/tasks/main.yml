@@ -1,3 +1,5 @@
+---
+
 - name: create normal_user .ssh directory
   file:
     path: "/home/{{ normal_user }}/.ssh"
@@ -5,14 +7,13 @@
     mode: '0700'
     owner: '{{ normal_user }}'
     group: '{{ normal_user }}'
-    
 
-- name: Copy authorized keys
-  lineinfile:
-    dest: '/home/{{ normal_user }}/.ssh/authorized_keys'
-    line: '{{ user_ssh_authorized_key }}'
-    create: true
-    mode: '0644'
-    owner: '{{ normal_user }}'
-    group: '{{ normal_user }}'
-
+# by using the module we are IDEMPOTENT - nothing will be changed if it doesnt have to    
+- name: ensure user's key is present in home dir ssh config folder authorized_keys
+  ansible.posix.authorized_key:
+    user: "{{normal_user}}"
+    state: present
+    key: "{{ user_ssh_authorized_key }}"
+  when: 
+    - user_ssh_authorized_key is defined
+    - "{{ user_ssh_authorized_key|length > 0 }}"
