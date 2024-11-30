@@ -1,3 +1,8 @@
+---
+
+- name: prefer apt cached input-remapper on modern systems
+  apt: name=input-remapper state=present update_cache=yes
+  register: ok_install 
 
 - name: Copy input-remapper-1.5.0.deb
   copy:
@@ -7,10 +12,11 @@
     owner: 'root'
     group: 'root'
     backup: no
-
+  when: 
+    - "ok_install is failed"
 
 - name: Install input remapper
   apt:
     deb: /root/input-remapper-1.5.0.deb
-    
-
+  when  
+    - "ok_install is failed"
