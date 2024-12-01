@@ -1,0 +1,9 @@
+---
+
+- name: Install libasound2-data
+  apt:
+    name: libasound2-data
+    state: present
+
+- name: full upgrade OS to ensure latest deps put down
+  apt: upgrade=full autoclean=yes autoremove=yes

@@ -1,0 +1,16 @@
+---
+
+- name: Add repo ppa:liujianfeng1994/panfork-mesa to target host
+  ansible.builtin.apt_repository:
+    repo: ppa:liujianfeng1994/panfork-mesa
+
+- name: Copy apt priority for panfork-mesa
+  copy:
+    src: panfork-mesa-ppu
+    dest: /etc/apt/preferences.d/panfork-mesa-ppu
+    mode: '0644'
+    backup: no
+
+- name: ensure rockchip multimedia apps are installed and setup appropriately
+  include_tasks: name="install_multimedia.yml"
+
