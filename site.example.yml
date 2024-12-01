@@ -1,8 +1,13 @@
 ---
+
+# ensure facts are available to implement custom logic per SBC
 - hosts: all
-  become: yes
   roles:
-    - role: orangepi5-hdmi
+    - sbc-facts
+   
+# provision basics
+- hosts: all
+  roles:
     - role: no-swap
     - role: no-boot-logo
     - role: net-disable-ipv6
@@ -11,14 +16,41 @@
     - role: set-timezone
     - role: user-ssh-authorized-key
     - role: ubuntu-desktop-minimal
-    - role: gdm-auto-login
-    - role: gdm-enable-wayland
-    - role: hdmi-audio-dts-a52
-    - role: kodi
     - role: extra-software
     - role: firefox-no-snap
     - role: input-remapper
+    - role: docker
+    - role: sshfs
+
+# provision per-SBC roles 
+- hosts: all
+  tasks:
+    - include_role: name="orangepi5-hdmi"
+      when:
+        - is_armbian
+        - is_sbc_rk35xx
+        - is_sbc_opi5 or is_sbc_opi5_plus
+
+# only provision gdm if host is in appropriate group
+- hosts: gdm
+  tasks:
+    - include_role: name="gdm-auto-login"
+    - include_role: name="gdm-enable-wayland"
+
+# kodi group hosts get kodi installed at a host level using debian packages 
+- hosts: kodi
+  roles:
+    - hdmi-audio-dts-a52
+    - kodi
+
+# flatpak-kodi get kodi installed at a host level using flatpak sandboxing
+- hosts: flatpak_kodi
+  roles:
+    - hdmi-audio-dts-a52
+    - kodi-flatpak
+
+- hosts: lg
+  become: yes
+  roles:
     - role: lgtv
     - role: surround-sound-test
-    - role: sshfs
-    - role: docker
