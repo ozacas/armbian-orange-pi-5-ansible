@@ -1,3 +1,37 @@
 ---
 
+- name: ensure tvheadend is installed
+  apt: name=tvheadend state=present install_recommends=yes
 
+- name: ensure xmltv perl grabber deps are installed - messy
+  apt: 
+    pkg:
+      - liberror-perl                                  
+      - libextutils-depends-perl                       
+      - libfile-fnmatch-perl                           
+      - libhtml-tree-perl
+      - libio-socket-ssl-perl
+      - libnet-ssleay-perl
+      - libregexp-assemble-perl                        
+      - libterm-readkey-perl                          
+      - libxml-namespacesupport-perl                 
+      - libxml-parser-perl                          
+      - libxml-perl                                
+      - libxml-sax-perl                           
+      - libxml-twig-perl                         
+      - libxml-writer-perl                      
+      - libyaml-tiny-perl                      
+      - perl-modules-5.38  
+      - libxmltv-perl
+    state: present
+
+- name: ensure dvb packages are available
+  apt:
+    state: present
+    pkg:
+      - libdvbpsi10
+
+- name: when icetv is specified download grabber and install and configure it
+  include_tasks: name="icetv.yml"
+  when:
+    - icetv is defined  # so that config variables in template are able to be set

@@ -1,0 +1,26 @@
+---
+
+- name: when icetv is specified download grabber and install and configure it
+  get_url: url=https://static.icetv.com.au/downloads/tv_grab_au_icetv dest=/tmp
+  delegate_to: localhost
+
+- name: copy grabber script to target host
+  copy: src=/tmp/tv_grab_au_icetv dest=/usr/bin/tv_grab_au_icetv owner=root group=root mode="0755"
+  delegate_to: localhost
+
+- name: compute home dir for hts user - since tvheadend is already installed, this wont create an already created user
+  user: name={{icetv.user|default('hts')}} state=present
+  register: user_attributes
+
+- name: create .xmltv folder for tvheadend user
+  file: path="{{user_attributes.home}}/.xmltv" owner={{icetv.user|default('hts')}} group={{icetv.user|default('hts')}} mode="0750" state=directory
+  become: yes # for chown support
+
+- name: install icetv config with user key
+  template:
+    src: templates/icetv.config.j2
+    dest: "{{user_attributes.home}}/.xmltv/tv_grab_{{icetv.iso_2_country|default('au')|lower}}_icetv.conf"
+    owner: '{{icetv.user|default('hts')}}'
+    group: '{{icetv.user|default('hts')}}'
+    mode: "0640"
+
