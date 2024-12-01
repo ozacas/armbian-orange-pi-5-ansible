@@ -1,5 +1,6 @@
 ---
 
+# ref: https://support.icetv.com.au/hc/en-us/articles/360000177535-Setting-up-IceTV-with-TvHeadend
 - name: when icetv is specified download grabber and install and configure it
   get_url: url=https://static.icetv.com.au/downloads/tv_grab_au_icetv dest=/tmp
   delegate_to: localhost

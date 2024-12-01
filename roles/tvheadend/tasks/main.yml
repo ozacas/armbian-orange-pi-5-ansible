@@ -1,5 +1,6 @@
 ---
 
+# ref: https://github.com/tvheadend/tvheadend
 - name: ensure tvheadend is installed
   apt: name=tvheadend state=present install_recommends=yes
 
@@ -34,4 +35,4 @@
 - name: when icetv is specified download grabber and install and configure it
   include_tasks: name="icetv.yml"
   when:
-    - icetv is defined  # so that config variables in template are able to be set
+    - icetv is defined  # so that required icetv config variables are defined (hopefully) 
