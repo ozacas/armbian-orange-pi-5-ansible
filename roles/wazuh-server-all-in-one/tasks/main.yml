@@ -1,0 +1,24 @@
+---
+
+- name: purge existing temp directory if any
+  file: state=absent path=/tmp/ansible-wazuh-all-in-one
+  delegate_to: localhost
+  become: no
+
+- name: clone wazuh manager all-in-one ansible role
+  shell: cd /tmp; git clone https://github.com/ozacas/ansible-wazuh-all-in-one -b main
+  delegate_to: localhost
+  become: no
+
+- name: install collection 
+  shell: cd /tmp/ansible-wazuh-all-in-one; ansible-galaxy collection install --force .
+  delegate_to: localhost
+  become: no
+
+- name: invoke roles to provision wazuh all-in-one on target host(s)
+  block: 
+    - include_role: name=ozacas.wazuh_all_in_one.prelim
+    - include_role: name=ozacas.wazuh_all_in_one.elasticsearch
+    - include_role: name=ozacas.wazuh_all_in_one.wazuh_manager
+    - include_role: name=ozacas.wazuh_all_in_one.filebeat 
+    - include_role: name=ozacas.wazuh_all_in_one.kibana 

@@ -1,0 +1,8 @@
+[Unit]
+Description=Automount NFS shared folder - {{item.mount}}
+
+[Automount]
+Where={{item.mount}}
+
+[Install]
+WantedBy=network.target

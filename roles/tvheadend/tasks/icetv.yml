@@ -1,9 +1,16 @@
 ---
 
+
 # ref: https://support.icetv.com.au/hc/en-us/articles/360000177535-Setting-up-IceTV-with-TvHeadend
 - name: when icetv is specified download grabber and install and configure it
   get_url: url=https://static.icetv.com.au/downloads/tv_grab_au_icetv dest=/tmp
   delegate_to: localhost
+
+- name: install more perl deps for this script if we get here
+  command: perl -MCPAN -e install {{item}}
+  with_items:
+    - "XMLTV::Usage"
+    - "HTTP::Date"
 
 - name: copy grabber script to target host
   copy: src=/tmp/tv_grab_au_icetv dest=/usr/bin/tv_grab_au_icetv owner=root group=root mode="0755"

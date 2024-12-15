@@ -1,0 +1,49 @@
+---
+
+- name: install required packages for a server role
+  apt: 
+    pkg:
+      - nfs-common
+      - nfs-kernel-server
+  register: pkgs_installed
+
+- name: reboot target host if software installed to activate kernel driver
+  reboot:
+  when:
+    - pgks_installed is changed 
+    - pkgs_installed is success
+
+- name: add specified exports folders if needed
+  file: 
+    state: directory 
+    path:  "{{item.path}}"
+    owner: "{{item.owner|default('root')}}"
+    group: "{{item.group|default('root')}}"
+    mode:  "{{item.mode|default('0755')}}"
+  with_items:
+    - "{{nfs_exports}}"
+  when:
+    - nfs_exports is defined
+    - "{{nfs_exports|length > 0}}"
+
+- name: ensure export entries are installed 
+  lineinfile:
+    content: "{{item.path}} {{item.cidr}}({{item.opts|default('rw,sync,fsid=0,no_subtree_check')}})"
+    regexp: "^{{item.path}}\\s"  # note included space char required
+    path: /etc/exports
+    insertafter: EOF
+  with_items:
+    - "{{nfs_exports}}"
+  when:
+    - nfs_exports is defined
+  register: exports
+
+- name: reload exports if entries changed 
+  command: exportfs -av
+  when:
+    - nfs_exports is defined
+    - exports is changed
+    - exports is success
+
+- name: ensure service is started at boot
+  systemd: name=nfs-server.service enabled=yes state=restarted masked=no daemon_reload=yes

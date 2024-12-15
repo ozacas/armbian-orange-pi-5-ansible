@@ -1,0 +1,13 @@
+[Unit]
+Description=Mount NFS {{item.svr_path}}
+Wants=network-online.target wpa_supplicant.service
+After=network-online.target wpa_supplicant.service
+
+[Mount]
+What={{item.svr_path}}
+Where={{item.mount}}
+Type=nfs
+Options={{item.options|default('rw,noauto') }}
+
+[Install]
+#nothing needed here

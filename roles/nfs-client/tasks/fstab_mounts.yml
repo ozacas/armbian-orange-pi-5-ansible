@@ -1,0 +1,29 @@
+---
+
+- name: ensure mounts are in fstab
+  lineinfile:
+    line: "{{ item.svr_path }} {{ item.mount }} nfs {{ item.mount_opts|default('rw,async') }}"
+    insertafter: EOF
+    regexp: "^{{item.svr_path}}\\s" # not extra space to handle subpath mounts
+    path: /etc/fstab
+  with_items:
+    - "{{ nfs_mounts }}"
+  when:
+    - nfs_mounts is defined
+  register: mount_results
+
+- name: ensure mount points exist
+  file: state=directory path={{item.mount}} mode="0755" owner=root group=root
+  with_items:
+    - "{{ nfs_mounts }}"
+  when:
+    - nfs_mounts is defined
+  register: mount_point_results
+
+- name: remount iff changed
+  command: mount -av
+  when:
+    - nfs_mounts is defined
+    - mount_results is changed
+    - mount_results is success
+    - mount_point_results is changed
