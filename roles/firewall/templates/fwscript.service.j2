@@ -1,0 +1,17 @@
+[Unit]
+Description=sbc fwscript role
+Documentation=https://github.com/ozacas/armbian-orange-pi-5-ansible
+DefaultDependencies=no
+Before=network-pre.target
+Wants=network-pre.target local-fs.target
+After=local-fs.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/sbin/fwscript.sh start
+ExecStop=/usr/local/sbin/fwscript.sh stop
+
+[Install]
+WantedBy=multi-user.target
+

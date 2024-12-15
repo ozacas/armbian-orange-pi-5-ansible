@@ -1,0 +1,33 @@
+---
+
+- name: ensure /usr/local/sbin exists with suitable permissions
+  file: state=directory state=present path=/usr/local/sbin owner=root group=root mode="0755"
+  become: yes
+
+- name: install script using users specification or default
+  template:
+    src: "{{ firewall_script |default("templates/firewalls/{{inventory_hostname}}.sh") }}"
+    dest: /usr/local/sbin/fwscript.sh
+    owner: root
+    group: root
+    mode: "0750"
+  become: yes
+
+- name: ensure systemd starts the script before network.target is reached
+  template:
+    src: templates/fwscript.service.j2
+    dest: /etc/systemd/system/fwscript.service
+    owner: root
+    group: root
+    mode: "0750"
+  become: yes
+
+- name: ensure ufw is stopped and disabled
+  systemd: masked=yes state=stopped enabled=no name=ufw
+  become: yes
+  ignore_errors: yes # ok, if not installed on target
+
+- name: ensure service is started 
+  systemd: state=restarted masked=no enabled=yes name=fwscript.service
+  become: yes
+    

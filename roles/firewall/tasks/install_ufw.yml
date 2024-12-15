@@ -1,0 +1,16 @@
+---
+
+- name: ensure ufw is installed
+  apt: state=present name=ufw
+  become: yes
+
+- name: ensure fw script, if any, is disabled
+  systemd: name=fwscript state=stopped enabled=no masked=no daemon_reload=yes
+  ignore_errors: yes # if not installed on this target
+  become: yes
+
+- name: ensure ufw is started and enabled at boot
+  systemd: name=ufw state=restarted enabeld=yes masked=no daemon_reload=yes 
+  become: yes
+
+# TODO FIXME... what rules?
