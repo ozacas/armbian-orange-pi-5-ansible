@@ -1,0 +1,105 @@
+---
+
+- name: fail if required variables not set
+  fail: msg="mosquitto_fqdn must be set to a usable domain"
+  when: 
+    - mosquitto_fqdn|default('')|length < 1
+
+- name: ensure package is on target
+  apt: 
+    pkg:
+      - mosquitto
+      - openssl
+    state: present
+
+- name: setup TLS via openssl for service
+  block:
+    - file: state=directory path="{{ item.path }}" owner="{{item.owner|default('root')}}" group="{{item.group|default('root')}}" mode="{{item.mode|default('0755')}}"
+      with_items:
+        - {"path": "/etc/mosquitto/tls/", "mode": "0750" }
+        - {"path": "/etc/mosquitto/tls/ca", "mode": "0700" }
+        - {"path": "/etc/mosquitto/tls/server", "mode": "0755" }
+        - {"path": "/etc/mosquitto/tls/clients", "mode": "0750" }
+    # generate CA into private folder
+    - command: openssl req -nodes -new -x509 -days "{{tls_ca_days|default(3650)}}" -extensions v3_ca -keyout ca.key -out ca.crt
+      args:
+        chdir: "/etc/mosquitto/tls/ca"
+#Country Name (2 letter code) [AU]:
+#State or Province Name (full name) [Some-State]:Queensland
+#Locality Name (eg, city) []:Brisbane
+#Organization Name (eg, company) [Internet Widgits Pty Ltd]:Mosquitto Service DN
+#Organizational Unit Name (eg, section) []:
+#Common Name (e.g. server FQDN or YOUR name) []:mqtt.local
+#Email Address []:
+        stdin: |
+          {{mosquitto_iso2_code|default('AU')}}
+          {{mosquitto_province|default('Queensland')}}
+          {{mosquitto_locality|default('Brisbane')}}
+          {{mosquitto_dn |default('Mosquitto Service DN')}}
+          dummyOU 
+          {{hostname |default('mqtt.local')}}
+          
+      become: yes
+    
+    - name: generate service private key
+      command: openssl genrsa -out server.key 2048
+      args:
+        chdir: "/etc/mosquitto/tls/server"
+
+    - name: ... and server cert via CSR from CA
+      command:  openssl req -out server.csr -key server.key -new
+#Country Name (2 letter code) [AU]:
+#State or Province Name (full name) [Some-State]:
+#Locality Name (eg, city) []:
+#Organization Name (eg, company) [Internet Widgits Pty Ltd]:
+#Organizational Unit Name (eg, section) []:
+#Common Name (e.g. server FQDN or YOUR name) []:
+#Email Address []:
+# Please enter the following 'extra' attributes to be sent with your certificate request
+#A challenge password []:
+#An optional company name []:
+      args:
+        chdir: "/etc/mosquitto/tls/server"
+        stdin: |
+          {{mosquitto_iso2_code|default('AU')}}
+          {{mosquitto_province|default('Queensland')}}
+          {{mosquitto_locality|default('Brisbane')}}
+          {{mosquitto_dn |default('Mosquitto Service DN')}}
+          dummyOU 
+          {{hostname |default('mqtt.local')}}
+          dummy@email.com
+          
+          {{mosquitto_dn |default('Mosquitto Service DN')}} 
+          
+      become: yes
+    - name: issue cert via CA we've just built
+      command: openssl x509 -req -in server.csr -CA /etc/mosquitto/tls/ca/ca.crt -CAkey /etc/mosquitto/tls/ca/ca.key -CAcreateserial -out server.crt -days "{{tls_cert_days |default(3650)}}"
+      args:
+        chdir: "/etc/mosquitto/tls/server"
+      become: yes
+
+    - include_tasks: "gen_client_tls_material.yml"
+      with_items:
+        - "{{ play_hosts }}"
+        - "{{ mosquitto_additional_clients |default([]) }}"
+
+    # ensure service is setup with appropriate TLS config
+    - template:
+        src: templates/listeners.conf
+        dest: /etc/mosquitto/conf.d/listeners.conf
+        backup: yes
+        owner: root
+        group: root
+        mode: 0640
+      register: listeners_status
+    - template:
+        src: templates/acl
+        dest: /etc/mosquitto/acl
+        owner: mosquitto
+        group: mosquitto
+        mode: 0640
+      register: acl_status
+    - command: chown -R mosquitto:mosquitto /etc/mosquitto/tls
+    - command: chmod -R o-rwx /etc/mosquitto/tls
+    # always restart to pick up new TLS
+    - systemd: name=mosquitto.service state=restarted masked=no enabled=yes daemon_reload=yes

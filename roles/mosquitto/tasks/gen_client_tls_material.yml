@@ -1,0 +1,29 @@
+---
+
+- name: issue client cert for CN set in loop variable item
+  block:
+    - debug: msg="Generating TLS material for {{item}} to permit access to mosquitto"
+    - command: openssl genrsa -out {{item}}.key 2048
+      args:
+        chdir: "/etc/mosquitto/tls/clients"
+      become: yes
+    - command: openssl req -out {{item}}.csr -key {{item}}.key -new
+      args:
+        chdir: "/etc/mosquitto/tls/clients"
+        stdin: |
+          {{mosquitto_iso2_code|default('AU')}}
+          {{mosquitto_province|default('Queensland')}}
+          {{mosquitto_locality|default('Brisbane')}}
+          {{item |default('Mosquitto Service DN')}}
+          dummyOU 
+          {{item |default('mqtt.local')}}
+          dummy@email.com
+        
+          {{hostname |default('Mosquitto Service DN')}} 
+          
+      become: yes
+    - command: openssl x509 -req -in {{item}}.csr -CA /etc/mosquitto/tls/ca/ca.crt -CAkey /etc/mosquitto/tls/ca/ca.key -CAcreateserial -out {{item}}.crt -days "{{ tls_client_days|default(3650) }}"
+      args:
+        chdir: "/etc/mosquitto/tls/clients"
+      become: yes
+
