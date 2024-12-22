@@ -1,0 +1,33 @@
+[all]
+t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh
+opi ansible_host=192.168.2.147 hostname=opi.lan firewall_script=templates/firewalls/opi.sh
+opi2 ansible_host=192.168.2.173 hostname=opi2.lan mosquitto_server=yes 
+
+[desktops]
+t6
+
+[kodi]
+t6
+
+[wazuh_manager]
+opi
+
+[mosquitto]
+opi2
+
+[mosquitto:vars]
+mosquitto_additional_clients='["hplappie.lan", "firewall.lan", "t6.lan", "opi.lan", "rock5b-plus.lan", "woodend.lan"]'
+mosquitto_fqdn=opi2.lan 
+tls_cert_days=3650 
+tls_ca_days=3650 
+
+[all:vars]
+ansible_become=yes
+ansible_ssh_user=acas
+timezone=UTC
+normal_user=acas
+#user_ssh_authorized_key=
+#ssh_fs_mount_directory: <SSHFS directory to mount, ex: /mnt/shared> #Use by sshfs role
+#ssh_fs_mount_connection: <SSHFS connection, ex: user@host:/your/directory/shared> #Used by sshfs role
+#lgtv_configuration: <if you want to control your lgtv remotely, ex: '{"MyTV": {"key": "xxxxxxxxxxxxxxxxxx", "mac": "xx:xx:xx:xx:xx:xx", "ip": "192.168.N.N", "hostname": "192.168.N.N"}}'
+extra_software=["vim", "armbian-config", "dnsutils", "bind9-host"]
