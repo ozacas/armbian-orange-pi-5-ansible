@@ -16,7 +16,7 @@
 - name: ensure systemd starts the script before network.target is reached
   template:
     src: templates/fwscript.service.j2
-    dest: /etc/systemd/system/fwscript.service
+    dest: /etc/systemd/system/firewall.service
     owner: root
     group: root
     mode: "0750"
@@ -28,6 +28,6 @@
   ignore_errors: yes # ok, if not installed on target
 
 - name: ensure service is started 
-  systemd: state=restarted masked=no enabled=yes name=fwscript.service
+  systemd: state=restarted masked=no enabled=yes name=firewall.service
   become: yes
     

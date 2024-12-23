@@ -1,0 +1,13 @@
+---
+
+- name: disable IPv4 traffic forwarding by default across ALL network interfaces - firewall may change this
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_forward
+    value: '0'
+    state: present
+
+- name: disable IPv6 traffic forwarding by default
+  ansible.posix.sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: '0'
+    state: present

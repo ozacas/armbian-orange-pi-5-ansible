@@ -1,5 +1,15 @@
 ---
 
+# TODO FIXME... support nftables on modern systems
+
+- name; ensure relevant software is installed on target
+  apt: 
+    pkg:
+      - iptables
+      - ufw
+    state: present
+  become: yes
+
 - name: install firewall script and enable at boot if present for target
   include_tasks: name="install_script.yml"
   when: 
