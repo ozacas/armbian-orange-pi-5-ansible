@@ -1,6 +1,6 @@
 [all]
 t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh
-opi ansible_host=192.168.2.147 hostname=opi.lan firewall_script=templates/firewalls/opi.sh harden=yes
+opi ansible_host=192.168.2.147 hostname=opi.lan firewall_script=templates/firewalls/opi.sh 
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan mosquitto_server=yes firewall_script=templates/firewalls/opi2.sh
 edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh
 

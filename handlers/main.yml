@@ -1,5 +1,6 @@
 ---
 
 handlers:
-  - name: reboot target host when requested by play
+  - name: reboot
     reboot:
+    become: yes

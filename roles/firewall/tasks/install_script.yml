@@ -32,6 +32,7 @@
 - name: ensure service is enabled but only start with a reboot so that it is clean startup
   systemd: masked=no enabled=yes name=firewall.service
   become: yes
-  notify: reboot  # reboot target if firewall changed
+  notify: 
+    - reboot  # reboot target if firewall changed
   when:
     - fw_script is changed or firewall is changed

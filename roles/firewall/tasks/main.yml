@@ -10,6 +10,8 @@
     state: present
   become: yes
 
+- debug: msg="Will attempt firewall install - sbc rk35xx? {{is_sbc_rk35xx}} firewall script? {{firewall_script is defined}} ufw? {{firewall_ufw is defined}}"
+
 - name: install firewall script and enable at boot if present for target
   include_tasks: "install_script.yml"
   when: 

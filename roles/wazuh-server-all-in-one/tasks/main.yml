@@ -6,7 +6,7 @@
   become: no
 
 - name: clone wazuh manager all-in-one ansible role
-  shell: cd /tmp; git clone https://github.com/ozacas/ansible-wazuh-all-in-one -b main
+  command: git clone https://github.com/ozacas/ansible-wazuh-all-in-one -b main /tmp/ansible-wazuh-all-in-one
   delegate_to: localhost
   become: no
 
@@ -22,3 +22,4 @@
     - include_role: name=ozacas.wazuh_all_in_one.wazuh_manager
     - include_role: name=ozacas.wazuh_all_in_one.filebeat 
     - include_role: name=ozacas.wazuh_all_in_one.kibana 
+  become: yes
