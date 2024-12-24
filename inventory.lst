@@ -1,6 +1,6 @@
 [all]
 t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh
-opi ansible_host=192.168.2.147 hostname=opi.lan firewall_script=templates/firewalls/opi.sh
+opi ansible_host=192.168.2.147 hostname=opi.lan firewall_script=templates/firewalls/opi.sh harden=yes
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan mosquitto_server=yes firewall_script=templates/firewalls/opi2.sh
 edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh
 
@@ -27,7 +27,6 @@ tls_cert_days=3650
 tls_ca_days=3650 
 
 [all:vars]
-ansible_become=yes
 ansible_ssh_user=acas
 timezone=UTC
 normal_user=acas

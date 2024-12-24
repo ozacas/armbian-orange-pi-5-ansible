@@ -1,25 +1,45 @@
 ---
 
-- name: disable armbian functionality which will break due to hardening
+- name: disable armbian functionality which will break system boot due to hardening
   include_tasks: "disable_armbian_ram_logging.yml"
+  when:
+    - is_armbian
+    - is_ubuntu
 
 - name: must be ubuntu 22/20 or 24 only supported for now
   fail: msg="Must be ubuntu 20, 22 or 24 only for now"
   when:
-    - not harden|default(False)|bool or not is_ubuntu or ansible_distribution_major_version < 20 or ansible_distribution_major_version > 24
+    - not harden|default(False)|bool or not is_ubuntu or ansible_distribution_major_version|int < 20 or ansible_distribution_major_version|int > 24
 
 - name: purge existing cis-benchmarks tree
-  file: state=absent path=/tmp/cis-benchmarks
-
-- name: pull CIS_BENCHMARKS repo - always pull ubuntu 22 repo regardless of ubuntu version for now
   delegate_to: localhost
-  git:
-    repo: https://github.com/ansible-lockdown/UBUNTU22-CIS.git
-    umask: "0027"
-    dest: /tmp/cis-benchmarks
- 
-- name: set hardening variables from user-controlled file
-  include_vars: "{{ cis_benchmark_settings_file|default("templates/ubuntu22-hardening-defaults.yml") }}"
+  file: state=absent path="{{playbook_dir}}/roles/cis-benchmarks"
 
-- name: harden target hosts with user-specified hardening extravars settings in effect
-  import_playbook: /tmp/cis-benchmarks/site.yml
+# we use my repo here for the clone as the upstream doesnt want to support arm64/32 as
+# the benchmarks are x86 only
+- name: pull CIS_BENCHMARKS repo - always pull ubuntu 22 repo regardless of ubuntu version for now
+  local_action: command git clone https://github.com/ozacas/UBUNTU22-CIS.git -b devel "{{playbook_dir}}/roles/cis-benchmarks"
+  become: no
+
+- name: set defaults for variables for CIS benchmarks
+  include_vars: "{{item}}"
+  with_items:
+    - "{{ cis_benchmark_settings_file|default('vars/ubuntu22-hardening-defaults.yml') }}"
+    - "{{playbook_dir}}/roles/cis-benchmarks/vars/audit.yml"
+    - "{{playbook_dir}}/roles/cis-benchmarks/vars/main.yml"
+
+- name: defeat version compare on playbook
+  delegate_to: localhost
+  template:
+    src:  templates/cis-benchmarks-main.yml.j2
+    dest: "{{playbook_dir}}/roles/cis-benchmarks/tasks/main.yml"
+    mode: "0644"
+  become: no
+  vars:
+    ansible_env: 
+      SUDO_USER: "{{ansible_user|default(ansible_ssh_user)}}"
+
+- name: execute harden procedure 
+  ansible.builtin.include_role: name="cis-benchmarks"
+  vars:
+    ansible_become: yes

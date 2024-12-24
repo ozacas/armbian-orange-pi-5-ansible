@@ -8,5 +8,8 @@
         line: ENABLED=false
         regexp: ^ENABLED
         state: present
-    - systemd: name=armbian-zram-config state=stopped masked=yes enabled=no daemon_reload=yes
-     
+    - systemd: name="{{item}}" state=stopped masked=yes enabled=no daemon_reload=yes
+      with_items:
+        - armbian-zram-config 
+        - armbian-ram-logging
+      ignore_errors: yes # ok if service not present on target

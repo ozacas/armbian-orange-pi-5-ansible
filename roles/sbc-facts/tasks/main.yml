@@ -55,3 +55,8 @@
   when: 
     - not is_armbian
     - not (is_sbc_opi5 or is_sbc_opi5_plus)
+
+- name: set ubuntu fact
+  set_fact:
+    is_ubuntu: "{{ 'ubuntu' in ansible_distribution|lower }}"
+
