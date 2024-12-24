@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Tue Dec 24 08:13:10 2024 AEST by acas
+#  Generated Wed Dec 25 07:11:09 2024 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
@@ -387,7 +387,7 @@ script_body() {
     # 
     $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 9981:9982  -m state --state NEW  -j ACCEPT
     $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 443,55000  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 443,5601,55000  -m state --state NEW  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
@@ -485,7 +485,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Tue Dec 24 08:13:10 2024 by acas"
+        log "Activating firewall script generated Wed Dec 25 07:11:09 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
