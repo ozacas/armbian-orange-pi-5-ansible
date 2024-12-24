@@ -1,7 +1,5 @@
 ---
 
-- name: perform reboot if requested at end as part of deployment procedure 
-  handler: reboot
-  reboot:
-
-
+handlers:
+  - name: reboot target host when requested by play
+    reboot:

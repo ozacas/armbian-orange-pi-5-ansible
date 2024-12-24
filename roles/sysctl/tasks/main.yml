@@ -1,11 +1,9 @@
 ---
 
 - name: disable IPv6 on target iff requested
-  include_tasks: name="disable_ipv6.yml"
-  when: 
-    - ipv6|default(False)|bool
+  include_tasks: "ipv6.yml"
 
 - name: disable IPv4/v6 traffic forward iff requested
-  include_tasks: name="disable_forwarding.yml"
+  include_tasks: "disable-forwarding.yml"
   when:
     - not ip_forwarding|default(True)|bool

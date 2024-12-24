@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Tue Dec 24 08:13:33 2024 AEST by acas
+#  Generated Tue Dec 24 09:43:32 2024 AEST by acas
 #
 # files: * edge2.fw /etc/fw/edge2.fw
 #
@@ -382,7 +382,7 @@ script_body() {
     # Even if it does not log host names during its
     # normal operations, statistics scripts such as
     # webalizer need it for reporting.
-    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 53  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 53,80,443  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  --dports 53,123  -m state --state NEW  -j ACCEPT
     # 
     # Rule 6 (global)
@@ -449,7 +449,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Tue Dec 24 08:13:33 2024 by acas"
+        log "Activating firewall script generated Tue Dec 24 09:43:32 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
