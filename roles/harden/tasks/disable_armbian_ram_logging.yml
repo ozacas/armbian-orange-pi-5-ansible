@@ -1,0 +1,12 @@
+---
+
+# this must be disabled since a boot failure will result on the hardened systems
+- name: disable ZRAM swap and logging
+  block:
+    - lineinfile: 
+        path: /etc/default/armbian-zram-config
+        line: ENABLED=false
+        regexp: ^ENABLED
+        state: present
+    - systemd: name=armbian-zram-config state=stopped masked=yes enabled=no daemon_reload=yes
+     

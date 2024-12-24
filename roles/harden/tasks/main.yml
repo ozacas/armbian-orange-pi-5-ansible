@@ -1,0 +1,25 @@
+---
+
+- name: disable armbian functionality which will break due to hardening
+  include_tasks: "disable_armbian_ram_logging.yml"
+
+- name: must be ubuntu 22/20 or 24 only supported for now
+  fail: msg="Must be ubuntu 20, 22 or 24 only for now"
+  when:
+    - not harden|default(False)|bool or not is_ubuntu or ansible_distribution_major_version < 20 or ansible_distribution_major_version > 24
+
+- name: purge existing cis-benchmarks tree
+  file: state=absent path=/tmp/cis-benchmarks
+
+- name: pull CIS_BENCHMARKS repo - always pull ubuntu 22 repo regardless of ubuntu version for now
+  delegate_to: localhost
+  git:
+    repo: https://github.com/ansible-lockdown/UBUNTU22-CIS.git
+    umask: "0027"
+    dest: /tmp/cis-benchmarks
+ 
+- name: set hardening variables from user-controlled file
+  include_vars: "{{ cis_benchmark_settings_file|default("templates/ubuntu22-hardening-defaults.yml") }}"
+
+- name: harden target hosts with user-specified hardening extravars settings in effect
+  import_playbook: /tmp/cis-benchmarks/site.yml
