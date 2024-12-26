@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Dec 21 13:56:11 2024 AEST by acas
+#  Generated Fri Dec 27 09:00:01 2024 AEST by acas
 #
 # files: * t6.fw /etc/t6.fw
 #
@@ -439,57 +439,63 @@ script_body() {
     $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
     $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
     $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p tcp -m tcp  -m multiport  --dports 53,2049,22  -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p udp -m udp  -m multiport  --dports 53,2049,123  -j ACCEPT
+    $IPTABLES -A Cid6603X3215082.0 -p tcp -m tcp  -m multiport  --dports 2049,22  -j ACCEPT
+    $IPTABLES -A Cid6603X3215082.0 -p udp -m udp  -m multiport  --dports 2049,123  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
     echo "Rule 4 (global)"
     # 
     # permit connectivity from t6 to key internal LAN services
-    $IPTABLES -N Cid6631X3215082.0
-    $IPTABLES -A INPUT -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j Cid6631X3215082.0
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443  -m state --state NEW  -j Cid6631X3215082.0
-    for i_end1 in $i_end1_list
-    do
-    test -n "$i_end1" && $IPTABLES -A Cid6631X3215082.0  -s $i_end1   -j ACCEPT 
-    done
-    for i_end0 in $i_end0_list
-    do
-    test -n "$i_end0" && $IPTABLES -A Cid6631X3215082.0  -s $i_end0   -j ACCEPT 
-    done
-    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 53,80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p udp -m udp  --dport 53  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 53,80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p udp -m udp  --dport 53  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 53,80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p udp -m udp  --dport 53  -m state --state NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
     echo "Rule 5 (global)"
     # 
-    # All other attempts to connect to
-    # the firewall are denied and logged
-    $IPTABLES -N RULE_5
-    for i_end1 in $i_end1_list
-    do
-    test -n "$i_end1" && $IPTABLES -A OUTPUT  -d $i_end1   -j RULE_5 
-    done
-    for i_end0 in $i_end0_list
-    do
-    test -n "$i_end0" && $IPTABLES -A OUTPUT  -d $i_end0   -j RULE_5 
-    done
-    $IPTABLES -A INPUT  -j RULE_5
-    $IPTABLES -A RULE_5  -j LOG  --log-level info --log-prefix "RULE 5 -- DENY "
-    $IPTABLES -A RULE_5  -j DROP
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 8883  -m state --state NEW  -j ACCEPT
     # 
     # Rule 6 (global)
     # 
     echo "Rule 6 (global)"
     # 
-    $IPTABLES -N RULE_6
-    $IPTABLES -A OUTPUT  -j RULE_6
-    $IPTABLES -A INPUT  -j RULE_6
-    $IPTABLES -A FORWARD  -j RULE_6
-    $IPTABLES -A RULE_6  -j LOG  --log-level info --log-prefix "RULE 6 -- DENY "
-    $IPTABLES -A RULE_6  -j DROP
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.143   --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    # 
+    # Rule 7 (global)
+    # 
+    echo "Rule 7 (global)"
+    # 
+    # All other attempts to connect to
+    # the firewall are denied and logged
+    $IPTABLES -N RULE_7
+    for i_end1 in $i_end1_list
+    do
+    test -n "$i_end1" && $IPTABLES -A OUTPUT  -d $i_end1   -j RULE_7 
+    done
+    for i_end0 in $i_end0_list
+    do
+    test -n "$i_end0" && $IPTABLES -A OUTPUT  -d $i_end0   -j RULE_7 
+    done
+    $IPTABLES -A INPUT  -j RULE_7
+    $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
+    $IPTABLES -A RULE_7  -j DROP
+    # 
+    # Rule 8 (global)
+    # 
+    echo "Rule 8 (global)"
+    # 
+    $IPTABLES -N RULE_8
+    $IPTABLES -A OUTPUT  -j RULE_8
+    $IPTABLES -A INPUT  -j RULE_8
+    $IPTABLES -A FORWARD  -j RULE_8
+    $IPTABLES -A RULE_8  -j LOG  --log-level info --log-prefix "RULE 8 -- DENY "
+    $IPTABLES -A RULE_8  -j DROP
 }
 
 ip_forward() {
@@ -545,7 +551,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Dec 21 13:56:11 2024 by acas"
+        log "Activating firewall script generated Fri Dec 27 09:00:01 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
