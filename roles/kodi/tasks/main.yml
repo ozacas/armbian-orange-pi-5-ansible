@@ -1,11 +1,17 @@
-- name: Install Packages
-  apt:
-    pkg:
-      - kodi
-    state: latest
+---
 
-- name: Copy to kodi-wayland.desktop
-  shell: mv /usr/share/xsessions/kodi.desktop /usr/share/wayland-sessions/kodi-wayland.desktop
-  args: 
-      creates: /usr/share/wayland-sessions/kodi-wayland.desktop
- 
+# flatpak is preferred as it simplifies upgrades and host-level deps for RK3588 sbc's
+
+- fail: msg="Kodi install requires an RK35xx SBC as a requirement"
+  when:
+    - not is_sbc_rk35xx
+   
+- name: install flatpak kodi iff requested
+  include_tasks: "flatpak.yml"
+  when: 
+    - kodi_flatpak|default(True)|bool
+
+- name: install non-flatpak kodi otherwise
+  include_tasks: "non_flatpak.yml"
+  when:
+    - not kodi_flatpak|default(True)|bool

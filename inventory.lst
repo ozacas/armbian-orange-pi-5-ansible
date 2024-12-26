@@ -5,11 +5,11 @@ opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/fire
 edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh
 
 [desktops]
-t6
+#t6
 edge
 
 [kodi]
-t6
+t6 kodi_flatpak=yes
 
 [wazuh_manager]
 opi

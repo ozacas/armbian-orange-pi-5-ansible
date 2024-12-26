@@ -1,0 +1,19 @@
+---
+
+- collections:
+    name: 
+      - community.general.flatpak
+      - community.general.flatpak_remote
+
+- name: Add the flathub flatpak repository remote to the user installation
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://dl.flathub.org/repo/flathub.flatpakrepo
+    method: user
+
+- name: install kodi flatpak for ssh user
+  community.general.flatpak:
+    name: fr.handbrake.ghb
+    state: latest
+    method: user
