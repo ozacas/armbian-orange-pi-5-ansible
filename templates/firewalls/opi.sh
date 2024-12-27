@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Wed Dec 25 07:11:09 2024 AEST by acas
+#  Generated Fri Dec 27 10:53:57 2024 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
@@ -317,10 +317,7 @@ configure_interfaces() {
     :
     # Configure interfaces
     update_addresses_of_interface "lo 127.0.0.1/8" ""
-    getaddr enP4p1s0  i_enP4p1s0
-    getaddr6 enP4p1s0  i_enP4p1s0_v6
-    getnet enP4p1s0  i_enP4p1s0_network
-    getnet6 enP4p1s0  i_enP4p1s0_v6_network
+    update_addresses_of_interface "enP4p1s0 192.168.2.143/24" ""
 }
 
 script_body() {
@@ -344,17 +341,8 @@ script_body() {
     # 
     echo "Rule 0 (lo)"
     # 
-    $IPTABLES -A INPUT -i lo   -j ACCEPT
-    for i_enP4p1s0 in $i_enP4p1s0_list
-    do
-    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT -o lo   -d $i_enP4p1s0   -j ACCEPT 
-    done
-    $IPTABLES -A OUTPUT -o lo   -d 127.0.0.1   -j ACCEPT
-    for i_enP4p1s0 in $i_enP4p1s0_list
-    do
-    test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -o lo   -d $i_enP4p1s0   -j ACCEPT 
-    done
-    $IPTABLES -A FORWARD -o lo   -d 127.0.0.1   -j ACCEPT
+    $IPTABLES -A INPUT -i lo   -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -o lo   -m state --state NEW  -j ACCEPT
     # 
     # Rule 1 (global)
     # 
@@ -373,10 +361,7 @@ script_body() {
     echo "Rule 2 (global)"
     # 
     $IPTABLES -N RULE_2
-    for i_enP4p1s0 in $i_enP4p1s0_list
-    do
-    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  -d $i_enP4p1s0   --dports 68,67  -m state --state NEW  -j RULE_2 
-    done
+    $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  -d 192.168.2.143   --dports 68,67  -m state --state NEW  -j RULE_2
     $IPTABLES -A INPUT -p udp -m udp  -m multiport  --dports 68,67  -m state --state NEW  -j RULE_2
     $IPTABLES -A RULE_2  -j LOG  --log-level info --log-prefix "RULE 2 -- ACCEPT "
     $IPTABLES -A RULE_2  -j ACCEPT
@@ -397,14 +382,8 @@ script_body() {
     # Even if it does not log host names during its
     # normal operations, statistics scripts such as
     # webalizer need it for reporting.
-    for i_enP4p1s0 in $i_enP4p1s0_list
-    do
-    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s $i_enP4p1s0   --dports 53,80,443  -m state --state NEW  -j ACCEPT 
-    done
-    for i_enP4p1s0 in $i_enP4p1s0_list
-    do
-    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -p udp -m udp  -m multiport  -s $i_enP4p1s0   --dports 53,123  -m state --state NEW  -j ACCEPT 
-    done
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.143   --dports 53,80,443  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p udp -m udp  -m multiport  -s 192.168.2.143   --dports 53,123  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 53,80,443  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  --dports 53,123  -m state --state NEW  -j ACCEPT
     # 
@@ -425,10 +404,7 @@ script_body() {
     # this rejects auth (ident) queries that remote
     # mail relays may send to this server when it
     # tries to send email out.
-    for i_enP4p1s0 in $i_enP4p1s0_list
-    do
-    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT -p tcp -m tcp  -d $i_enP4p1s0   --dport 113  -j REJECT 
-    done
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.143   --dport 113  -j REJECT
     $IPTABLES -A INPUT -p tcp -m tcp  --dport 113  -j REJECT
 }
 
@@ -485,7 +461,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Wed Dec 25 07:11:09 2024 by acas"
+        log "Activating firewall script generated Fri Dec 27 10:53:57 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

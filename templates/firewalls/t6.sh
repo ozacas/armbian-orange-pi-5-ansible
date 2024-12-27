@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Fri Dec 27 09:00:01 2024 AEST by acas
+#  Generated Fri Dec 27 10:53:51 2024 AEST by acas
 #
 # files: * t6.fw /etc/t6.fw
 #
@@ -439,8 +439,8 @@ script_body() {
     $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
     $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
     $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p tcp -m tcp  -m multiport  --dports 2049,22  -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p udp -m udp  -m multiport  --dports 2049,123  -j ACCEPT
+    $IPTABLES -A Cid6603X3215082.0 -p tcp -m tcp  --dport 22  -j ACCEPT
+    $IPTABLES -A Cid6603X3215082.0 -p udp -m udp  --dport 123  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
@@ -459,7 +459,8 @@ script_body() {
     echo "Rule 5 (global)"
     # 
     $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 8883  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8883,2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m state --state NEW  -j ACCEPT
     # 
     # Rule 6 (global)
     # 
@@ -551,7 +552,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Fri Dec 27 09:00:01 2024 by acas"
+        log "Activating firewall script generated Fri Dec 27 10:53:51 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Thu Dec 26 06:25:26 2024 AEST by acas
+#  Generated Fri Dec 27 10:58:58 2024 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -318,15 +318,8 @@ run_epilog_and_exit() {
 configure_interfaces() {
     :
     # Configure interfaces
+    update_addresses_of_interface "enP4p1s0 192.168.2.173/24" ""
     update_addresses_of_interface "lo 127.0.0.1/8" ""
-    getaddr enP4p1s0  i_enP4p1s0
-    getaddr6 enP4p1s0  i_enP4p1s0_v6
-    getnet enP4p1s0  i_enP4p1s0_network
-    getnet6 enP4p1s0  i_enP4p1s0_v6_network
-    getaddr enP3p1s0  i_enP3p1s0
-    getaddr6 enP3p1s0  i_enP3p1s0_v6
-    getnet enP3p1s0  i_enP3p1s0_network
-    getnet6 enP3p1s0  i_enP3p1s0_v6_network
 }
 
 script_body() {
@@ -400,32 +393,23 @@ script_body() {
     $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 53,80,443  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  --dports 53,123  -m state --state NEW  -j ACCEPT
     # 
-    # Rule 6 (enP4p1s0)
+    # Rule 6 (global)
     # 
-    echo "Rule 6 (enP4p1s0)"
-    # 
-    $IPTABLES -N In_RULE_6
-    $IPTABLES -A INPUT -i enP4p1s0   -s 127.0.0.1   -d 127.0.0.1   -j In_RULE_6
-    $IPTABLES -A In_RULE_6  -j LOG  --log-level info --log-prefix "RULE 6 -- DENY "
-    $IPTABLES -A In_RULE_6  -j DROP
-    # 
-    # Rule 7 (global)
-    # 
-    echo "Rule 7 (global)"
+    echo "Rule 6 (global)"
     # 
     # this rejects auth (ident) queries that remote
     # mail relays may send to this server when it
     # tries to send email out.
     $IPTABLES -A INPUT -p tcp -m tcp  --dport 113  -j REJECT
     # 
-    # Rule 8 (global)
+    # Rule 7 (global)
     # 
-    echo "Rule 8 (global)"
+    echo "Rule 7 (global)"
     # 
-    $IPTABLES -N RULE_8
-    $IPTABLES -A INPUT  -j RULE_8
-    $IPTABLES -A RULE_8  -j LOG  --log-level info --log-prefix "RULE 8 -- DENY "
-    $IPTABLES -A RULE_8  -j DROP
+    $IPTABLES -N RULE_7
+    $IPTABLES -A INPUT  -j RULE_7
+    $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
+    $IPTABLES -A RULE_7  -j DROP
 }
 
 ip_forward() {
@@ -481,7 +465,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Thu Dec 26 06:25:26 2024 by acas"
+        log "Activating firewall script generated Fri Dec 27 10:58:58 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
