@@ -1,0 +1,87 @@
+---
+
+# ensure facts are available to implement custom logic per SBC
+- hosts: all
+  roles:
+    - sbc-facts
+
+- name: harden targets iff requested BEFORE system gets changed too much
+  hosts: all
+  become: no
+  handlers:
+    - import_tasks: handlers/handlers.yml
+  tasks:
+    - include_role: name="harden"
+      when:
+         - is_ubuntu   
+         - harden|default(False)|bool
+    - name: explicitly reboot now to verify that host reboots correctly -it may not if harden does bad things
+      reboot: 
+      become: yes
+      when:
+         - is_ubuntu
+         - harden|default(False)|bool
+
+- name: provision basics for all targets
+  hosts: all
+  become: yes
+  handlers:
+    - import_tasks: handlers/handlers.yml
+  roles:
+    - no-swap
+    - no-boot-logo
+    - disable-root-account
+    - set-hostname
+    - set-timezone
+    - sysctl
+    - firewall 
+    - user-ssh-authorized-key
+    - extra-software
+    - input-remapper
+    - docker
+    - sshfs
+    - role: nfs-client
+      when: 
+        - nfs_mounts is defined
+    - role: nfs-server
+      when:
+        - nfs_exports is defined
+
+# desktop related roles
+- hosts: desktops
+  become: yes
+  roles:
+    - ubuntu-desktop-minimal
+    - firefox-no-snap
+
+# only provision gdm if host is in appropriate group
+- hosts: desktops
+  tasks:
+    - include_role: name="orangepi5-hdmi"
+      when:
+        - is_armbian
+        - is_sbc_rk35xx
+        - is_sbc_opi5 or is_sbc_opi5_plus
+    - include_role: name="gdm-auto-login"
+    - include_role: name="gdm-enable-wayland"
+
+# kodi group hosts get kodi installed at a host level using debian packages 
+- hosts: desktops kodi
+  roles:
+    - hdmi-audio-dts-a52
+    - kodi 
+
+- hosts: lg
+  become: yes
+  roles:
+    - role: lgtv
+    - role: surround-sound-test
+
+- hosts: wazuh_manager
+  become: yes
+  roles:
+    - wazuh-server-all-in-one
+
+- hosts: mosquitto
+  roles:
+    - mosquitto

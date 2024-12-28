@@ -3,14 +3,8 @@
 - name: ensure nfs-common is installed
   apt: name=nfs-common state=present
 
-- name: perform mounts via systemd automount iff requested
-  include_tasks: name="systemd_automount.yml"
-  when:
-    - "{{ use_systemd|default(True) }}"
-    - nfs_mounts is defined
-
-- name: perform mounts via fstab iff requested
+- name: perform mounts via fstab 
   include_tasks: name="fstab_mounts.yml"
   when:
     - nfs_mounts is defined
-    - "{{ use_systemd|default(True) }}"
+    - nfs_mounts|length > 0
