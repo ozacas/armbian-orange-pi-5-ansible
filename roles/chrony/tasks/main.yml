@@ -1,0 +1,17 @@
+---
+
+- name: force chrony install iff requested
+  apt: name=chrony state=latest
+  when:
+    - "'chrony' in timesync_method"
+
+- name: check if chrony is enabled and if so ensure it is correctly configured
+  command: systemctl is-enabled chrony
+  register: is_chrony_enabled
+
+- name: only configure chrony iff enabled
+  block:
+    - template: src=templates/chrony.conf.j2 dest=/etc/chrony/chrony.conf owner=root group=root mode="0640"
+    - systemd: masked=no enabled=yes name=chrony state=restarted daemon_reload=yes
+  when:
+    - "'enabled' in is_chrony_enabled.stdout"

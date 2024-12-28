@@ -39,7 +39,7 @@
   register: exports
 
 - name: reload exports if entries changed 
-  command: exportfs -av
+  command: exportfs -ra
   when:
     - nfs_exports is defined
     - exports is changed
