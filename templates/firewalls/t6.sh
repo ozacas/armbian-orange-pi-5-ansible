@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Fri Dec 27 10:53:51 2024 AEST by acas
+#  Generated Sat Dec 28 11:26:01 2024 AEST by acas
 #
 # files: * t6.fw /etc/t6.fw
 #
@@ -405,62 +405,62 @@ script_body() {
     # 
     echo "Rule 1 (lo)"
     # 
-    $IPTABLES -A INPUT -i lo   -m state --state NEW  -j ACCEPT
+    for i_end1 in $i_end1_list
+    do
+    test -n "$i_end1" && $IPTABLES -A INPUT -i lo   -s $i_end1   -m state --state NEW  -j ACCEPT 
+    done
+    for i_end0 in $i_end0_list
+    do
+    test -n "$i_end0" && $IPTABLES -A INPUT -i lo   -s $i_end0   -m state --state NEW  -j ACCEPT 
+    done
+    $IPTABLES -A INPUT -i lo   -s 127.0.0.1   -m state --state NEW  -j ACCEPT
+    for i_end1 in $i_end1_list
+    do
+    test -n "$i_end1" && $IPTABLES -A FORWARD -i lo   -s $i_end1   -m state --state NEW  -j ACCEPT 
+    done
+    for i_end0 in $i_end0_list
+    do
+    test -n "$i_end0" && $IPTABLES -A FORWARD -i lo   -s $i_end0   -m state --state NEW  -j ACCEPT 
+    done
+    $IPTABLES -A FORWARD -i lo   -s 127.0.0.1   -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -o lo   -m state --state NEW  -j ACCEPT
     # 
     # Rule 2 (global)
     # 
     echo "Rule 2 (global)"
     # 
-    $IPTABLES -N Cid5309X186792.0
-    $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  --dports 68,67  -m state --state NEW  -j Cid5309X186792.0
-    $IPTABLES -N RULE_2
-    for i_end1 in $i_end1_list
-    do
-    test -n "$i_end1" && $IPTABLES -A Cid5309X186792.0  -d $i_end1   -j RULE_2 
-    done
-    for i_end0 in $i_end0_list
-    do
-    test -n "$i_end0" && $IPTABLES -A Cid5309X186792.0  -d $i_end0   -j RULE_2 
-    done
-    $IPTABLES -A INPUT -p udp -m udp  -m multiport  --dports 68,67  -m state --state NEW  -j RULE_2
-    $IPTABLES -A RULE_2  -j LOG  --log-level info --log-prefix "RULE 2 -- ACCEPT "
-    $IPTABLES -A RULE_2  -j ACCEPT
+    $IPTABLES -A OUTPUT  -d 127.0.0.53   -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD  -d 127.0.0.53   -m state --state NEW  -j ACCEPT
     # 
     # Rule 3 (global)
     # 
     echo "Rule 3 (global)"
     # 
-    # SSH Access to firewall is permitted
-    # only from internal network
-    $IPTABLES -N Cid6603X3215082.0
-    $IPTABLES -A INPUT  -s 192.168.2.0/24   -m state --state NEW  -j Cid6603X3215082.0
-    $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p tcp -m tcp  --dport 22  -j ACCEPT
-    $IPTABLES -A Cid6603X3215082.0 -p udp -m udp  --dport 123  -j ACCEPT
+    # permit connectivity from t6 to key internal LAN services
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
     echo "Rule 4 (global)"
     # 
-    # permit connectivity from t6 to key internal LAN services
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 53,80,443,22  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p udp -m udp  --dport 53  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 53,80,443,22  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p udp -m udp  --dport 53  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 53,80,443,22  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A FORWARD -p udp -m udp  --dport 53  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8883,2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m state --state NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
     echo "Rule 5 (global)"
     # 
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8883,2049  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -N Cid6330X2280494.0
+    $IPTABLES -A OUTPUT  -d 192.168.2.1   -m state --state NEW  -j Cid6330X2280494.0
+    $IPTABLES -A Cid6330X2280494.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
+    $IPTABLES -A Cid6330X2280494.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
+    $IPTABLES -A Cid6330X2280494.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
+    $IPTABLES -A Cid6330X2280494.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
+    $IPTABLES -A Cid6330X2280494.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -A Cid6330X2280494.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 6 (global)
     # 
@@ -552,7 +552,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Fri Dec 27 10:53:51 2024 by acas"
+        log "Activating firewall script generated Sat Dec 28 11:26:01 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
