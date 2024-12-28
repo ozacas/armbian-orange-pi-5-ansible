@@ -2,7 +2,7 @@
 
 - name: ensure mounts are in fstab
   lineinfile:
-    line: "{{ item.svr_path }} {{item.mount}} {{item.fstype|default('nfs4')}} {{ item.mount_opts|default('rw,async,noauto,x-systemd.automount,nofail') }}"
+    line: "{{ item.svr_path }} {{item.mount}} {{item.fstype|default('nfs4')}} {{ item.mount_opts|default('rw,async,x-systemd.automount,nofail,retry=10000') }} 1 1"
     insertafter: EOF
     regexp: "^{{item.svr_path}}\\s" # not extra space to handle subpath mounts
     path: /etc/fstab
@@ -25,7 +25,7 @@
     - name: notify systemd of changes
       systemd: daemon_reload=yes
     - name: remount filesytems explicitly during run to check for connectivity
-    - name: command: mount -av
+      command: mount -av
   when:
     - nfs_mounts is defined
     - mount_results is changed or mount_results is success or mount_point_results is changed

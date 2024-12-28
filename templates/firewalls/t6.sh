@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Dec 28 11:26:01 2024 AEST by acas
+#  Generated Sat Dec 28 12:38:50 2024 AEST by acas
 #
 # files: * t6.fw /etc/t6.fw
 #
@@ -446,7 +446,7 @@ script_body() {
     echo "Rule 4 (global)"
     # 
     $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8883,2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8096,8883,2049  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m state --state NEW  -j ACCEPT
     # 
     # Rule 5 (global)
@@ -466,7 +466,7 @@ script_body() {
     # 
     echo "Rule 6 (global)"
     # 
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.143   --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.147   --dport 1514:1515  -m state --state NEW  -j ACCEPT
     # 
     # Rule 7 (global)
     # 
@@ -552,7 +552,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Dec 28 11:26:01 2024 by acas"
+        log "Activating firewall script generated Sat Dec 28 12:38:50 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
