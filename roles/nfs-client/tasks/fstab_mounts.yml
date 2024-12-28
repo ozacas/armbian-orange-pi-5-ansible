@@ -19,6 +19,7 @@
   when:
     - nfs_mounts is defined
   register: mount_point_results
+  ignore_errors: yes # might get an error resulting from the filesystem already being mounted for example
 
 - name: ensure systemd knows about fstab changes, iff any
   block:
