@@ -34,7 +34,8 @@
     - set-hostname
     - set-timezone
     - sysctl
-    - firewall 
+    - dns-resolver
+    - firewall  # assumes firewall rules dont break DNS resolution or ssh...
     - user-ssh-authorized-key
     - extra-software
     - input-remapper

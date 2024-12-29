@@ -4,14 +4,14 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Fri Dec 27 10:53:57 2024 AEST by acas
+#  Generated Sun Dec 29 11:33:27 2024 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
 # Compiled for iptables (any version)
 #
 
-
+# opi::: error: Dynamic interface enP3p1s0 should not have an IP address object attached to it. This IP address object will be ignored.
 
 
 FWBDEBUG=""
@@ -289,8 +289,8 @@ load_modules() {
 
 verify_interfaces() {
     :
-    echo "Verifying interfaces: lo enP4p1s0"
-    for i in lo enP4p1s0 ; do
+    echo "Verifying interfaces: lo enP4p1s0 enP3p1s0"
+    for i in lo enP4p1s0 enP3p1s0 ; do
         $IP link show "$i" > /dev/null 2>&1 || {
             log "Interface $i does not exist"
             exit 1
@@ -317,7 +317,11 @@ configure_interfaces() {
     :
     # Configure interfaces
     update_addresses_of_interface "lo 127.0.0.1/8" ""
-    update_addresses_of_interface "enP4p1s0 192.168.2.143/24" ""
+    update_addresses_of_interface "enP4p1s0 192.168.2.147/32" ""
+    getaddr enP3p1s0  i_enP3p1s0
+    getaddr6 enP3p1s0  i_enP3p1s0_v6
+    getnet enP3p1s0  i_enP3p1s0_network
+    getnet6 enP3p1s0  i_enP3p1s0_v6_network
 }
 
 script_body() {
@@ -337,75 +341,102 @@ script_body() {
 
     # ================ Table 'filter', rule set Policy
     # 
-    # Rule 0 (lo)
+    # Rule 0 (enP3p1s0,enP4p1s0)
     # 
-    echo "Rule 0 (lo)"
+    echo "Rule 0 (enP3p1s0,enP4p1s0)"
+    # 
+    # anti-spoofing rule
+    $IPTABLES -N In_RULE_0
+    for i_enP3p1s0 in $i_enP3p1s0_list
+    do
+    test -n "$i_enP3p1s0" && $IPTABLES -A INPUT -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    done
+    $IPTABLES -A INPUT -i enP3p1s0   -s 192.168.2.147   -j In_RULE_0
+    for i_enP3p1s0 in $i_enP3p1s0_list
+    do
+    test -n "$i_enP3p1s0" && $IPTABLES -A INPUT -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    done
+    $IPTABLES -A INPUT -i enP4p1s0   -s 192.168.2.147   -j In_RULE_0
+    for i_enP3p1s0 in $i_enP3p1s0_list
+    do
+    test -n "$i_enP3p1s0" && $IPTABLES -A FORWARD -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    done
+    $IPTABLES -A FORWARD -i enP3p1s0   -s 192.168.2.147   -j In_RULE_0
+    for i_enP3p1s0 in $i_enP3p1s0_list
+    do
+    test -n "$i_enP3p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    done
+    $IPTABLES -A FORWARD -i enP4p1s0   -s 192.168.2.147   -j In_RULE_0
+    $IPTABLES -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
+    $IPTABLES -A In_RULE_0  -j DROP
+    # 
+    # Rule 1 (lo)
+    # 
+    echo "Rule 1 (lo)"
     # 
     $IPTABLES -A INPUT -i lo   -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -o lo   -m state --state NEW  -j ACCEPT
-    # 
-    # Rule 1 (global)
-    # 
-    echo "Rule 1 (global)"
-    # 
-    $IPTABLES -N Cid6037X3824567.0
-    $IPTABLES -A INPUT  -s 192.168.2.0/24   -m state --state NEW  -j Cid6037X3824567.0
-    $IPTABLES -A Cid6037X3824567.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
-    $IPTABLES -A Cid6037X3824567.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
-    $IPTABLES -A Cid6037X3824567.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
-    $IPTABLES -A Cid6037X3824567.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid6037X3824567.0 -p tcp -m tcp  --dport 22  -j ACCEPT
     # 
     # Rule 2 (global)
     # 
     echo "Rule 2 (global)"
     # 
-    $IPTABLES -N RULE_2
-    $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  -d 192.168.2.143   --dports 68,67  -m state --state NEW  -j RULE_2
-    $IPTABLES -A INPUT -p udp -m udp  -m multiport  --dports 68,67  -m state --state NEW  -j RULE_2
-    $IPTABLES -A RULE_2  -j LOG  --log-level info --log-prefix "RULE 2 -- ACCEPT "
-    $IPTABLES -A RULE_2  -j ACCEPT
+    # server needs DNS to back-resolve clients IPs.
+    # Even if it does not log host names during its
+    # normal operations, statistics scripts such as
+    # webalizer need it for reporting.
+    $IPTABLES -A OUTPUT  -d 127.0.0.53   -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD  -d 127.0.0.53   -m state --state NEW  -j ACCEPT
     # 
     # Rule 3 (global)
     # 
     echo "Rule 3 (global)"
     # 
-    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 443,5601,55000  -m state --state NEW  -j ACCEPT
+    $IPTABLES -N RULE_3
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j RULE_3
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j RULE_3
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j RULE_3
+    $IPTABLES -A RULE_3  -j LOG  --log-level info --log-prefix "RULE 3 -- ACCEPT "
+    $IPTABLES -A RULE_3  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
     echo "Rule 4 (global)"
     # 
-    # server needs DNS to back-resolve clients IPs.
-    # Even if it does not log host names during its
-    # normal operations, statistics scripts such as
-    # webalizer need it for reporting.
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.143   --dports 53,80,443  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p udp -m udp  -m multiport  -s 192.168.2.143   --dports 53,123  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 53,80,443  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  --dports 53,123  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m state --state NEW  -j ACCEPT
     # 
-    # Rule 6 (enP4p1s0)
+    # Rule 5 (global)
     # 
-    echo "Rule 6 (enP4p1s0)"
+    echo "Rule 5 (global)"
     # 
-    $IPTABLES -N In_RULE_6
-    $IPTABLES -A INPUT -i enP4p1s0   -j In_RULE_6
-    $IPTABLES -A FORWARD -i enP4p1s0   -j In_RULE_6
-    $IPTABLES -A In_RULE_6  -j LOG  --log-level info --log-prefix "RULE 6 -- DENY "
-    $IPTABLES -A In_RULE_6  -j DROP
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8096,8883,2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m state --state NEW  -j ACCEPT
+    # 
+    # Rule 6 (global)
+    # 
+    echo "Rule 6 (global)"
+    # 
+    $IPTABLES -N Cid6381X2413238.0
+    $IPTABLES -A OUTPUT  -d 192.168.2.1   -m state --state NEW  -j Cid6381X2413238.0
+    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
+    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
+    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
+    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
+    $IPTABLES -A Cid6381X2413238.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -A Cid6381X2413238.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 7 (global)
     # 
     echo "Rule 7 (global)"
     # 
-    # this rejects auth (ident) queries that remote
-    # mail relays may send to this server when it
-    # tries to send email out.
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.143   --dport 113  -j REJECT
-    $IPTABLES -A INPUT -p tcp -m tcp  --dport 113  -j REJECT
+    $IPTABLES -N RULE_7
+    $IPTABLES -A OUTPUT  -j RULE_7
+    $IPTABLES -A INPUT  -j RULE_7
+    $IPTABLES -A FORWARD  -j RULE_7
+    $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
+    $IPTABLES -A RULE_7  -j DROP
 }
 
 ip_forward() {
@@ -461,7 +492,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Fri Dec 27 10:53:57 2024 by acas"
+        log "Activating firewall script generated Sun Dec 29 11:33:27 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

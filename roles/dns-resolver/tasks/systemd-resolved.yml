@@ -1,0 +1,28 @@
+---
+
+- name: ensure required software is present
+  apt: name=bind9-host state=latest
+
+- name: install resolved.conf with configured deployment settings
+  template: 
+    src: templates/resolved.conf.j2 
+    dest: /etc/systemd/resolved.conf
+    owner: root
+    group: root
+    mode: "0640"
+
+- name: purge default armbian config to ensure template settings only are in effect
+  file: state=absent path=/etc/systemd/resolved.conf.d
+
+- name: enable systemd-resolved service
+  systemd: enabled=yes masked=no daemon_reload=yes state=restarted name=systemd-resolved
+
+- name: fail deployment if its not working
+  command: host www.theage.com.au 127.0.0.53
+  register: required_results
+
+- name: faily deployment if no address records found
+  fail: msg="No address records returned - DNS is not working on {{inventory_hostname}}"
+  when: 
+    - "'has address' not in required_results.stdout"
+

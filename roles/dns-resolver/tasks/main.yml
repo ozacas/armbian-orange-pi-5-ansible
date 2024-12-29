@@ -1,0 +1,6 @@
+---
+
+- name: provision systemd-resolved on target host
+  include_tasks: "systemd-resolved.yml"
+  when:
+    - "'systemd-resolved' in dns_method|default('')"
