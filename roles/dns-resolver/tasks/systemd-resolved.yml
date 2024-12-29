@@ -17,6 +17,9 @@
 - name: enable systemd-resolved service
   systemd: enabled=yes masked=no daemon_reload=yes state=restarted name=systemd-resolved
 
+- name: ensure /etc/resolv.conf points to systemd-resolved
+  command: ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+
 - name: fail deployment if its not working
   command: host www.theage.com.au 127.0.0.53
   register: required_results
