@@ -21,7 +21,7 @@
   command: host www.theage.com.au 127.0.0.53
   register: required_results
 
-- name: faily deployment if no address records found
+- name: fail deployment if no address records found
   fail: msg="No address records returned - DNS is not working on {{inventory_hostname}}"
   when: 
     - "'has address' not in required_results.stdout"

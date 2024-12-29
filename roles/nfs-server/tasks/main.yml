@@ -10,8 +10,8 @@
 - name: reboot target host if software installed to activate kernel driver
   reboot:
   when:
-    - pgks_installed is changed 
-    - pkgs_installed is success
+    - "pkgs_installed is changed"
+    - "pkgs_installed is success"
 
 - name: add specified exports folders if needed
   file: 
@@ -28,10 +28,11 @@
 
 - name: ensure export entries are installed 
   lineinfile:
-    content: "{{item.path}} {{item.cidr}}({{item.opts|default('rw,sync,fsid=0,no_subtree_check')}})"
+    line: "{{item.path}} {{item.cidr}}({{item.opts|default('rw,sync,fsid=0,no_subtree_check')}})"
     regexp: "^{{item.path}}\\s"  # note included space char required
     path: /etc/exports
     insertafter: EOF
+    state: present
   with_items:
     - "{{nfs_exports}}"
   when:
