@@ -9,7 +9,7 @@
     dest: /etc/systemd/resolved.conf
     owner: root
     group: root
-    mode: "0640"
+    mode: "0644" # must be world readable to avoid perm denied error
 
 - name: purge default armbian config to ensure template settings only are in effect
   file: state=absent path=/etc/systemd/resolved.conf.d
