@@ -4,14 +4,14 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sun Dec 29 11:33:27 2024 AEST by acas
+#  Generated Sun Dec 29 17:21:13 2024 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
 # Compiled for iptables (any version)
 #
 
-# opi::: error: Dynamic interface enP3p1s0 should not have an IP address object attached to it. This IP address object will be ignored.
+
 
 
 FWBDEBUG=""
@@ -317,7 +317,10 @@ configure_interfaces() {
     :
     # Configure interfaces
     update_addresses_of_interface "lo 127.0.0.1/8" ""
-    update_addresses_of_interface "enP4p1s0 192.168.2.147/32" ""
+    getaddr enP4p1s0  i_enP4p1s0
+    getaddr6 enP4p1s0  i_enP4p1s0_v6
+    getnet enP4p1s0  i_enP4p1s0_network
+    getnet6 enP4p1s0  i_enP4p1s0_v6_network
     getaddr enP3p1s0  i_enP3p1s0
     getaddr6 enP3p1s0  i_enP3p1s0_v6
     getnet enP3p1s0  i_enP3p1s0_network
@@ -325,6 +328,13 @@ configure_interfaces() {
 }
 
 script_body() {
+    echo 1 > /proc/sys/net/ipv4/conf/all/rp_filter 
+     echo 0 > /proc/sys/net/ipv4/conf/all/accept_source_route 
+     echo 0 > /proc/sys/net/ipv4/conf/all/accept_redirects 
+     echo 1 > /proc/sys/net/ipv4/conf/all/log_martians 
+     echo 1 > /proc/sys/net/ipv4/icmp_echo_ignore_broadcasts 
+
+
     # ================ IPv4
 
 
@@ -332,7 +342,14 @@ script_body() {
     # accept established sessions
     $IPTABLES -A INPUT   -m state --state ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -A OUTPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT 
-    $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+    $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT 
+    # drop packets that do not match any valid state and log them
+    $IPTABLES -N drop_invalid
+    $IPTABLES -A OUTPUT   -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A INPUT    -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A FORWARD  -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A drop_invalid -j LOG --log-level debug --log-prefix "INVALID state -- DENY "
+    $IPTABLES -A drop_invalid -j DROP
 
 
 
@@ -351,22 +368,34 @@ script_body() {
     do
     test -n "$i_enP3p1s0" && $IPTABLES -A INPUT -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
-    $IPTABLES -A INPUT -i enP3p1s0   -s 192.168.2.147   -j In_RULE_0
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    done
     for i_enP3p1s0 in $i_enP3p1s0_list
     do
     test -n "$i_enP3p1s0" && $IPTABLES -A INPUT -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
-    $IPTABLES -A INPUT -i enP4p1s0   -s 192.168.2.147   -j In_RULE_0
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    done
     for i_enP3p1s0 in $i_enP3p1s0_list
     do
     test -n "$i_enP3p1s0" && $IPTABLES -A FORWARD -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
-    $IPTABLES -A FORWARD -i enP3p1s0   -s 192.168.2.147   -j In_RULE_0
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    done
     for i_enP3p1s0 in $i_enP3p1s0_list
     do
     test -n "$i_enP3p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
-    $IPTABLES -A FORWARD -i enP4p1s0   -s 192.168.2.147   -j In_RULE_0
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    done
     $IPTABLES -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
     $IPTABLES -A In_RULE_0  -j DROP
     # 
@@ -403,8 +432,8 @@ script_body() {
     # 
     echo "Rule 4 (global)"
     # 
-    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   -d 192.168.2.146   --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   -d 192.168.2.146   --dports 5601,55000  -m state --state NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
@@ -442,6 +471,7 @@ script_body() {
 ip_forward() {
     :
     echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 }
 
 reset_all() {
@@ -492,7 +522,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sun Dec 29 11:33:27 2024 by acas"
+        log "Activating firewall script generated Sun Dec 29 17:21:13 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Fri Dec 27 10:58:58 2024 AEST by acas
+#  Generated Sun Dec 29 17:17:52 2024 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -291,8 +291,8 @@ load_modules() {
 
 verify_interfaces() {
     :
-    echo "Verifying interfaces: enP4p1s0 lo enP3p1s0"
-    for i in enP4p1s0 lo enP3p1s0 ; do
+    echo "Verifying interfaces: enP4p1s0 lo"
+    for i in enP4p1s0 lo ; do
         $IP link show "$i" > /dev/null 2>&1 || {
             log "Interface $i does not exist"
             exit 1
@@ -318,8 +318,11 @@ run_epilog_and_exit() {
 configure_interfaces() {
     :
     # Configure interfaces
-    update_addresses_of_interface "enP4p1s0 192.168.2.173/24" ""
     update_addresses_of_interface "lo 127.0.0.1/8" ""
+    getaddr enP4p1s0  i_enP4p1s0
+    getaddr6 enP4p1s0  i_enP4p1s0_v6
+    getnet enP4p1s0  i_enP4p1s0_network
+    getnet6 enP4p1s0  i_enP4p1s0_v6_network
 }
 
 script_body() {
@@ -347,6 +350,19 @@ script_body() {
 
     # ================ Table 'filter', rule set Policy
     # 
+    # Rule 0 (enP4p1s0)
+    # 
+    echo "Rule 0 (enP4p1s0)"
+    # 
+    # anti-spoofing rule for packets that claim to originate from opi2 but are inbound on the interface (note dynamic addressing in use) meaning they actually came from somewhere else and thus have been "spoofed" as trust worthy
+    $IPTABLES -N In_RULE_0
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    done
+    $IPTABLES -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
+    $IPTABLES -A In_RULE_0  -j DROP
+    # 
     # Rule 1 (lo)
     # 
     echo "Rule 1 (lo)"
@@ -358,63 +374,55 @@ script_body() {
     # 
     echo "Rule 2 (global)"
     # 
-    $IPTABLES -N Cid4544X3093618.0
-    $IPTABLES -A INPUT  -s 192.168.2.0/24   -m state --state NEW  -j Cid4544X3093618.0
-    $IPTABLES -A Cid4544X3093618.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
-    $IPTABLES -A Cid4544X3093618.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
-    $IPTABLES -A Cid4544X3093618.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
-    $IPTABLES -A Cid4544X3093618.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid4544X3093618.0 -p tcp -m tcp  -m multiport  --dports 2049,22  -j ACCEPT
+    # server needs DNS to back-resolve clients IPs.
+    # Even if it does not log host names during its
+    # normal operations, statistics scripts such as
+    # webalizer need it for reporting.
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,2049,22  -m state --state NEW  -j ACCEPT
     # 
     # Rule 3 (global)
     # 
     echo "Rule 3 (global)"
     # 
-    $IPTABLES -N RULE_3
-    $IPTABLES -A INPUT -p udp -m udp  -m multiport  --dports 68,67  -m state --state NEW  -j RULE_3
-    $IPTABLES -A RULE_3  -j LOG  --log-level info --log-prefix "RULE 3 -- ACCEPT "
-    $IPTABLES -A RULE_3  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 8096,8123,8096,8883  -m state --state NEW  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
     echo "Rule 4 (global)"
     # 
-    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 8096,8123,8883  -m state --state NEW  -j ACCEPT
+    $IPTABLES -N Cid6434X2437931.0
+    $IPTABLES -A OUTPUT  -d 192.168.2.1   -m state --state NEW  -j Cid6434X2437931.0
+    $IPTABLES -A Cid6434X2437931.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
+    $IPTABLES -A Cid6434X2437931.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
+    $IPTABLES -A Cid6434X2437931.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
+    $IPTABLES -A Cid6434X2437931.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
+    $IPTABLES -A Cid6434X2437931.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -A Cid6434X2437931.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
     echo "Rule 5 (global)"
-    # 
-    # server needs DNS to back-resolve clients IPs.
-    # Even if it does not log host names during its
-    # normal operations, statistics scripts such as
-    # webalizer need it for reporting.
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 53,80,443  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p udp -m udp  -m multiport  --dports 53,123  -m state --state NEW  -j ACCEPT
-    # 
-    # Rule 6 (global)
-    # 
-    echo "Rule 6 (global)"
     # 
     # this rejects auth (ident) queries that remote
     # mail relays may send to this server when it
     # tries to send email out.
     $IPTABLES -A INPUT -p tcp -m tcp  --dport 113  -j REJECT
     # 
-    # Rule 7 (global)
+    # Rule 6 (global)
     # 
-    echo "Rule 7 (global)"
+    echo "Rule 6 (global)"
     # 
-    $IPTABLES -N RULE_7
-    $IPTABLES -A INPUT  -j RULE_7
-    $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
-    $IPTABLES -A RULE_7  -j DROP
+    $IPTABLES -N RULE_6
+    $IPTABLES -A INPUT  -j RULE_6
+    $IPTABLES -A RULE_6  -j LOG  --log-level info --log-prefix "RULE 6 -- DENY "
+    $IPTABLES -A RULE_6  -j DROP
 }
 
 ip_forward() {
     :
-    echo 0 > /proc/sys/net/ipv4/ip_forward
+    echo 1 > /proc/sys/net/ipv4/ip_forward
+echo 1 > /proc/sys/net/ipv6/conf/all/forwarding
 }
 
 reset_all() {
@@ -465,7 +473,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Fri Dec 27 10:58:58 2024 by acas"
+        log "Activating firewall script generated Sun Dec 29 17:17:52 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

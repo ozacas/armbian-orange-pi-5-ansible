@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Dec 28 12:38:50 2024 AEST by acas
+#  Generated Sun Dec 29 17:21:13 2024 AEST by acas
 #
 # files: * t6.fw /etc/t6.fw
 #
@@ -466,37 +466,28 @@ script_body() {
     # 
     echo "Rule 6 (global)"
     # 
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.147   --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -N Cid6386X2103338.0
+    $IPTABLES -A INPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j Cid6386X2103338.0
+    for i_end1 in $i_end1_list
+    do
+    test -n "$i_end1" && $IPTABLES -A Cid6386X2103338.0  -s $i_end1   -j ACCEPT 
+    done
+    for i_end0 in $i_end0_list
+    do
+    test -n "$i_end0" && $IPTABLES -A Cid6386X2103338.0  -s $i_end0   -j ACCEPT 
+    done
+    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j ACCEPT
     # 
     # Rule 7 (global)
     # 
     echo "Rule 7 (global)"
     # 
-    # All other attempts to connect to
-    # the firewall are denied and logged
     $IPTABLES -N RULE_7
-    for i_end1 in $i_end1_list
-    do
-    test -n "$i_end1" && $IPTABLES -A OUTPUT  -d $i_end1   -j RULE_7 
-    done
-    for i_end0 in $i_end0_list
-    do
-    test -n "$i_end0" && $IPTABLES -A OUTPUT  -d $i_end0   -j RULE_7 
-    done
+    $IPTABLES -A OUTPUT  -j RULE_7
     $IPTABLES -A INPUT  -j RULE_7
+    $IPTABLES -A FORWARD  -j RULE_7
     $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
     $IPTABLES -A RULE_7  -j DROP
-    # 
-    # Rule 8 (global)
-    # 
-    echo "Rule 8 (global)"
-    # 
-    $IPTABLES -N RULE_8
-    $IPTABLES -A OUTPUT  -j RULE_8
-    $IPTABLES -A INPUT  -j RULE_8
-    $IPTABLES -A FORWARD  -j RULE_8
-    $IPTABLES -A RULE_8  -j LOG  --log-level info --log-prefix "RULE 8 -- DENY "
-    $IPTABLES -A RULE_8  -j DROP
 }
 
 ip_forward() {
@@ -552,7 +543,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Dec 28 12:38:50 2024 by acas"
+        log "Activating firewall script generated Sun Dec 29 17:21:13 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
