@@ -29,3 +29,13 @@
   when: 
     - "'has address' not in required_results.stdout"
 
+- command: resolvectl status
+  register: resolvectl_status
+
+- name: but also fail deployment if resolvectl doesnt report configured ip's
+  fail: msg="Requested DNS server was not configured correctly - {{item}} is not present in `resolvectl status`"
+  when:
+    - "item not in resolvectl_status.stdout"
+  with_items:
+    - "{{ dns_primary_servers |default([]) }}"
+    - "{{ dns_fallback_servers |default([]) }}"
