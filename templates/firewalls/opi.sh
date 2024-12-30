@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sun Dec 29 17:21:13 2024 AEST by acas
+#  Generated Mon Dec 30 20:50:41 2024 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
@@ -522,7 +522,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sun Dec 29 17:21:13 2024 by acas"
+        log "Activating firewall script generated Mon Dec 30 20:50:41 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

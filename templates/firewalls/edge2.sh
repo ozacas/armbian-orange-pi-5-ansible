@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Thu Dec 26 05:38:39 2024 AEST by acas
+#  Generated Mon Dec 30 20:50:40 2024 AEST by acas
 #
 # files: * edge2.fw /etc/fw/edge2.fw
 #
@@ -327,7 +327,14 @@ script_body() {
     # accept established sessions
     $IPTABLES -A INPUT   -m state --state ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -A OUTPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT 
-    $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+    $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT 
+    # drop packets that do not match any valid state and log them
+    $IPTABLES -N drop_invalid
+    $IPTABLES -A OUTPUT   -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A INPUT    -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A FORWARD  -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A drop_invalid -j LOG --log-level debug --log-prefix "INVALID state -- DENY "
+    $IPTABLES -A drop_invalid -j DROP
 
 
 
@@ -448,7 +455,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Thu Dec 26 05:38:39 2024 by acas"
+        log "Activating firewall script generated Mon Dec 30 20:50:40 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

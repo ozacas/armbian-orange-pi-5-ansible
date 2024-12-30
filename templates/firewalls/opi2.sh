@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sun Dec 29 17:17:52 2024 AEST by acas
+#  Generated Mon Dec 30 20:50:41 2024 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -341,7 +341,14 @@ script_body() {
     # accept established sessions
     $IPTABLES -A INPUT   -m state --state ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -A OUTPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT 
-    $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT
+    $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT 
+    # drop packets that do not match any valid state and log them
+    $IPTABLES -N drop_invalid
+    $IPTABLES -A OUTPUT   -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A INPUT    -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A FORWARD  -m state --state INVALID  -j drop_invalid 
+    $IPTABLES -A drop_invalid -j LOG --log-level debug --log-prefix "INVALID state -- DENY "
+    $IPTABLES -A drop_invalid -j DROP
 
 
 
@@ -356,6 +363,10 @@ script_body() {
     # 
     # anti-spoofing rule for packets that claim to originate from opi2 but are inbound on the interface (note dynamic addressing in use) meaning they actually came from somewhere else and thus have been "spoofed" as trust worthy
     $IPTABLES -N In_RULE_0
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    done
     for i_enP4p1s0 in $i_enP4p1s0_list
     do
     test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
@@ -378,7 +389,9 @@ script_body() {
     # Even if it does not log host names during its
     # normal operations, statistics scripts such as
     # webalizer need it for reporting.
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,2049,22  -m state --state NEW  -j ACCEPT
     $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,2049,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,2049,22  -m state --state NEW  -j ACCEPT
     # 
     # Rule 3 (global)
     # 
@@ -407,6 +420,10 @@ script_body() {
     # this rejects auth (ident) queries that remote
     # mail relays may send to this server when it
     # tries to send email out.
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT -p tcp -m tcp  -d $i_enP4p1s0   --dport 113  -j REJECT 
+    done
     $IPTABLES -A INPUT -p tcp -m tcp  --dport 113  -j REJECT
     # 
     # Rule 6 (global)
@@ -414,6 +431,10 @@ script_body() {
     echo "Rule 6 (global)"
     # 
     $IPTABLES -N RULE_6
+    for i_enP4p1s0 in $i_enP4p1s0_list
+    do
+    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT  -d $i_enP4p1s0   -j RULE_6 
+    done
     $IPTABLES -A INPUT  -j RULE_6
     $IPTABLES -A RULE_6  -j LOG  --log-level info --log-prefix "RULE 6 -- DENY "
     $IPTABLES -A RULE_6  -j DROP
@@ -473,7 +494,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sun Dec 29 17:17:52 2024 by acas"
+        log "Activating firewall script generated Mon Dec 30 20:50:41 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
