@@ -49,6 +49,9 @@
     - role: nfs-server
       when:
         - nfs_exports is defined
+    - role: multimedia
+      when: 
+        - "multimedia|default(False)|bool"
 
 # desktop related roles
 - hosts: desktops

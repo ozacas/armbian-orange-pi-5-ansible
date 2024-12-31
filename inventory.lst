@@ -2,7 +2,7 @@
 t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' 
 opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh 
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]'
-rock-5b-plus ansible_host=192.168.2.198 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes
+rock-5b-plus ansible_host=192.168.2.198 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes multimedia=yes
 edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh
 
 [desktops]
@@ -37,7 +37,7 @@ normal_user=acas
 #ssh_fs_mount_directory: <SSHFS directory to mount, ex: /mnt/shared> #Use by sshfs role
 #ssh_fs_mount_connection: <SSHFS connection, ex: user@host:/your/directory/shared> #Used by sshfs role
 #lgtv_configuration: <if you want to control your lgtv remotely, ex: '{"MyTV": {"key": "xxxxxxxxxxxxxxxxxx", "mac": "xx:xx:xx:xx:xx:xx", "ip": "192.168.N.N", "hostname": "192.168.N.N"}}'
-extra_software=["vim", "armbian-config", "dnsutils", "bind9-host", "net-tools", "git", "nvme-cli"]
+extra_software=["vim", "armbian-config", "dnsutils", "bind9-host", "net-tools", "git", "nvme-cli", "python3-pip"]
 ip_forwarding=no
 ipv6=yes
 
@@ -56,7 +56,7 @@ dns_multicast=no
 dns_cache=yes
 
 # apt setup for [all] target hosts (will also obey ipv4/ipv6 settings)
-apt_install_recommends=yes
+apt_install_recommends=no
 apt_disable_esm=yes
 apt={"mirror": "http://au.sbcmirror.org/armbian/apt", "distro_name": "noble"}
-apt_proxy={"http": "http://192.168.2.1:3128", "https": "http://192.168.2.1:3128"}
+#apt_proxy={"http": "http://192.168.2.1:3128", "https": "http://192.168.2.1:3128"}
