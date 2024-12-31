@@ -2,13 +2,14 @@
 t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' 
 opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh 
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]'
-#r5b-plus ansible_host=192.168.2.99 hostname=r5b-plus.lan firewall_script=templates/firewalls/r5b-plus.sh harden=yes nfs_mounts=='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]'
+rock-5b-plus ansible_host=192.168.2.198 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts=='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes
 edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh
 
 [desktops]
 #t6
 edge
-#r5b-plus
+# desktop is already baked into this image, so no change
+#rock-5b-plus
 
 #[kodi]
 #t6 kodi_flatpak=yes

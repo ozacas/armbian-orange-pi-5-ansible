@@ -11,6 +11,9 @@
   when:
     - not harden|default(False)|bool or not is_ubuntu or ansible_distribution_major_version|int < 20 or ansible_distribution_major_version|int > 24
 
+- name: ensure ufw is installed at least for now, subsequent code may remove. Harden assumes ufw
+  apt: name=ufw state=latest
+
 - name: purge existing cis-benchmarks tree
   delegate_to: localhost
   file: state=absent path="{{playbook_dir}}/roles/cis-benchmarks"

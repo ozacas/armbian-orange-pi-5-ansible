@@ -8,6 +8,11 @@
         line: ENABLED=false
         regexp: ^ENABLED
         state: present
+    - lineinfile:
+        path: /etc/fstab
+        line: "#/dev/zram mount disabled by ansible harden role"
+        regexp: ^/dev/zram
+        state: absent
     - systemd: name="{{item}}" state=stopped masked=yes enabled=no daemon_reload=yes
       with_items:
         - armbian-zram-config 
