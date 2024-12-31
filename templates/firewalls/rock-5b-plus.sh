@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Tue Dec 31 14:58:04 2024 AEST by acas
+#  Generated Wed Jan  1 08:29:16 2025 AEST by acas
 #
 # files: * rock-5b-plus.fw /etc/fw/rock-5b-plus.fw
 #
@@ -289,8 +289,8 @@ load_modules() {
 
 verify_interfaces() {
     :
-    echo "Verifying interfaces: enP4p65s0"
-    for i in enP4p65s0 ; do
+    echo "Verifying interfaces: enP4p65s0 loopback wlP2p33s0"
+    for i in enP4p65s0 loopback wlP2p33s0 ; do
         $IP link show "$i" > /dev/null 2>&1 || {
             log "Interface $i does not exist"
             exit 1
@@ -321,6 +321,10 @@ configure_interfaces() {
     getaddr6 enP4p65s0  i_enP4p65s0_v6
     getnet enP4p65s0  i_enP4p65s0_network
     getnet6 enP4p65s0  i_enP4p65s0_v6_network
+    getaddr wlP2p33s0  i_wlP2p33s0
+    getaddr6 wlP2p33s0  i_wlP2p33s0_v6
+    getnet wlP2p33s0  i_wlP2p33s0_network
+    getnet6 wlP2p33s0  i_wlP2p33s0_v6_network
 }
 
 script_body() {
@@ -332,6 +336,9 @@ script_body() {
     $IPTABLES -A INPUT   -m state --state ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -A OUTPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT 
+    # backup ssh access
+    $IPTABLES -A INPUT  -p tcp -m tcp  -s 192.168.2.1/255.255.255.255  --dport 22  -m state --state NEW,ESTABLISHED -j  ACCEPT 
+    $IPTABLES -A OUTPUT  -p tcp -m tcp  -d 192.168.2.1/255.255.255.255  --sport 22  -m state --state ESTABLISHED,RELATED -j ACCEPT 
     # drop packets that do not match any valid state and log them
     $IPTABLES -N drop_invalid
     $IPTABLES -A OUTPUT   -m state --state INVALID  -j drop_invalid 
@@ -347,36 +354,70 @@ script_body() {
 
     # ================ Table 'filter', rule set Policy
     # 
-    # Rule 0 (enP4p65s0)
+    # Rule 0 (enP4p65s0,wlP2p33s0)
     # 
-    echo "Rule 0 (enP4p65s0)"
+    echo "Rule 0 (enP4p65s0,wlP2p33s0)"
     # 
-    # anti-spoofing rule - but only works because this kernel is 5.10 and hence the interfaces are correctly named eth0 and eth1
+    # anti-spoofing rule - but only works because the interfaces have names carefully chosen to match ubuntu linux
     $IPTABLES -N In_RULE_0
+    for i_wlP2p33s0 in $i_wlP2p33s0_list
+    do
+    test -n "$i_wlP2p33s0" && $IPTABLES -A INPUT -i enP4p65s0   -s $i_wlP2p33s0   -j In_RULE_0 
+    done
     for i_enP4p65s0 in $i_enP4p65s0_list
     do
     test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
+    done
+    for i_wlP2p33s0 in $i_wlP2p33s0_list
+    do
+    test -n "$i_wlP2p33s0" && $IPTABLES -A INPUT -i wlP2p33s0   -s $i_wlP2p33s0   -j In_RULE_0 
+    done
+    for i_enP4p65s0 in $i_enP4p65s0_list
+    do
+    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i wlP2p33s0   -s $i_enP4p65s0   -j In_RULE_0 
+    done
+    for i_wlP2p33s0 in $i_wlP2p33s0_list
+    do
+    test -n "$i_wlP2p33s0" && $IPTABLES -A FORWARD -i enP4p65s0   -s $i_wlP2p33s0   -j In_RULE_0 
     done
     for i_enP4p65s0 in $i_enP4p65s0_list
     do
     test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
+    for i_wlP2p33s0 in $i_wlP2p33s0_list
+    do
+    test -n "$i_wlP2p33s0" && $IPTABLES -A FORWARD -i wlP2p33s0   -s $i_wlP2p33s0   -j In_RULE_0 
+    done
+    for i_enP4p65s0 in $i_enP4p65s0_list
+    do
+    test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i wlP2p33s0   -s $i_enP4p65s0   -j In_RULE_0 
+    done
     $IPTABLES -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
     $IPTABLES -A In_RULE_0  -j DROP
     # 
-    # Rule 1 (lo)
+    # Rule 1 (loopback)
     # 
-    echo "Rule 1 (lo)"
+    echo "Rule 1 (loopback)"
     # 
-    for i_enP4p65s0 in $i_enP4p65s0_list
+    for i_wlP2p33s0 in $i_wlP2p33s0_list
     do
-    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i lo   -s $i_enP4p65s0   -m state --state NEW  -j ACCEPT 
+    test -n "$i_wlP2p33s0" && $IPTABLES -A INPUT -i loopback   -s $i_wlP2p33s0   -m state --state NEW  -j ACCEPT 
     done
     for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i lo   -s $i_enP4p65s0   -m state --state NEW  -j ACCEPT 
+    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i loopback   -s $i_enP4p65s0   -m state --state NEW  -j ACCEPT 
     done
-    $IPTABLES -A OUTPUT -o lo   -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -i loopback   -s 127.0.0.1   -m state --state NEW  -j ACCEPT
+    for i_wlP2p33s0 in $i_wlP2p33s0_list
+    do
+    test -n "$i_wlP2p33s0" && $IPTABLES -A FORWARD -i loopback   -s $i_wlP2p33s0   -m state --state NEW  -j ACCEPT 
+    done
+    for i_enP4p65s0 in $i_enP4p65s0_list
+    do
+    test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i loopback   -s $i_enP4p65s0   -m state --state NEW  -j ACCEPT 
+    done
+    $IPTABLES -A FORWARD -i loopback   -s 127.0.0.1   -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -o loopback   -m state --state NEW  -j ACCEPT
     # 
     # Rule 2 (global)
     # 
@@ -419,9 +460,15 @@ script_body() {
     # 
     echo "Rule 6 (global)"
     # 
+    $IPTABLES -N Cid6515X2570525.0
+    $IPTABLES -A INPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j Cid6515X2570525.0
+    for i_wlP2p33s0 in $i_wlP2p33s0_list
+    do
+    test -n "$i_wlP2p33s0" && $IPTABLES -A Cid6515X2570525.0  -s $i_wlP2p33s0   -j ACCEPT 
+    done
     for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -p tcp -m tcp  -s $i_enP4p65s0   --dport 1514:1515  -m state --state NEW  -j ACCEPT 
+    test -n "$i_enP4p65s0" && $IPTABLES -A Cid6515X2570525.0  -s $i_enP4p65s0   -j ACCEPT 
     done
     $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j ACCEPT
     # 
@@ -449,6 +496,9 @@ reset_all() {
 
 block_action() {
     reset_all
+    # backup ssh access
+    $IPTABLES  -A INPUT  -p tcp -m tcp  -s 192.168.2.1/255.255.255.255  --dport 22  -m state --state NEW,ESTABLISHED -j  ACCEPT
+    $IPTABLES  -A OUTPUT  -p tcp -m tcp  -d 192.168.2.1/255.255.255.255  --sport 22  -m state --state ESTABLISHED,RELATED -j ACCEPT
 }
 
 stop_action() {
@@ -490,7 +540,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Tue Dec 31 14:58:04 2024 by acas"
+        log "Activating firewall script generated Wed Jan  1 08:29:16 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
