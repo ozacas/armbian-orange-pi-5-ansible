@@ -1,0 +1,10 @@
+---
+
+- name: install opencl and deps
+  apt: 
+    pkg:
+      - clinfo
+    install_recommends: yes
+    state: latest
+
+  

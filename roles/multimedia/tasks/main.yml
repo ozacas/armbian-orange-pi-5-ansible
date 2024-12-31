@@ -1,0 +1,26 @@
+---
+
+- name: only ubuntu 22.04 or ubuntu 24.04 are supported
+  fail: msg="Only Ubuntu 22.04 or 24.04 are supported at this time"
+  when:
+    - is_sbc_rk35xx
+    - is_kernel_vendor
+    - ansible_distribution_major_version not in ('22', '24')
+
+- name: add multimedia apt repo
+  template: 
+    src: templates/multimedia.list.j2
+    dest: /etc/apt/sources.list.d/liujianfeng1994-ubuntu-rockchip-multimedia-{{ansible_distribution_release|lower}}.sources
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: update apt cache
+  apt: update_cache=yes
+
+- name: install opencl
+  include_tasks: "opencl.yml"
+
+- name: install rkmppenc
+  include_tasks: "rkmppenc.yml"
+ 
