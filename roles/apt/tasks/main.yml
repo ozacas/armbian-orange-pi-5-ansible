@@ -1,0 +1,51 @@
+---
+
+- name: fail apt role if prereqs not met
+  fail: msg="Only ubuntu 20.04/22.04/24.04 are supported by this role... please fix"
+  when:
+    - "not is_ubuntu or ansible_distribution_major_version not in ('20', '22', '24')"
+
+- name: install armbian keyring gpg key if not already present
+  copy: 
+    src: files/armbian.gpg
+    dest: /usr/share/keyrings/armbian.gpg
+    force: no  # dont replace already existing file
+
+- name: install armbian mirror into /etc/apt/sources.list.d
+  template:
+    src: templates/armbian.list.j2
+    dest: /etc/apt/sources.list.d/armbian.list
+    backup: yes
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: install ubuntu pkg mirror into /etc/apt/sources.list
+  template:
+    src: templates/ubuntu.list.j2
+    dest: /etc/apt/sources.list
+    backup: yes
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: ensure apt is configured to fetch based on network config
+  template:
+    src:  templates/33-networking-setup
+    dest: /etc/apt/apt.conf.d/33-network-setup.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: purge ESM annoyance iff requested
+  file: path=/etc/apt/apt.conf.d/20apt-esm-hook.conf state=absent
+  when: 
+    - "apt_disable_esm|default(False)|bool"
+
+- name: configure install recommends per request
+  template:
+    src: templates/71-armbian-no-recommends
+    dest: /etc/apt/apt.conf.d/71-armbian-no-recommends
+    owner: root
+    group: root
+    mode: "0644"

@@ -1,0 +1,5 @@
+---
+
+- name: immediate_fw_reboot
+  reboot:
+

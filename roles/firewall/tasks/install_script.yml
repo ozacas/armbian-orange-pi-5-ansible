@@ -12,7 +12,7 @@
     group: root
     mode: "0750"
   become: yes
-  notify: reboot  # iff changed, we need to ensure a clean reboot is scheduled
+  notify: immediate_fw_reboot  # iff changed, we need to ensure a clean reboot is scheduled
   register: fw_script
 
 - name: ensure systemd starts the script before network.target is reached
@@ -34,6 +34,6 @@
   systemd: masked=no enabled=yes name=firewall.service
   become: yes
   notify: 
-    - reboot  # reboot target if firewall changed
+    - immediate_fw_reboot  # reboot target if firewall changed
   when:
     - fw_script is changed or firewall is changed

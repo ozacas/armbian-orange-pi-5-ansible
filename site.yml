@@ -42,6 +42,7 @@
     - docker
     - sshfs
     - role: chrony
+    - apt  # we do apt quite late since we need resolver, firewall and other stuff operational first
     - role: nfs-client
       when: 
         - nfs_mounts is defined

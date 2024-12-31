@@ -1,0 +1,2 @@
+APT::Install-Recommends "{{ apt_install_recomends|default(True)|bool|int }}";
+APT::Install-Suggests "{{ apt_install_recommends|default(True)|bool|int }}";

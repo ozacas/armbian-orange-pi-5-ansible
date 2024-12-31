@@ -1,0 +1,16 @@
+# fetch ONLY using configured host network stacks
+{% if ipv4 is defined and not ipv4|bool %}
+Acquire::ForceIPv6 'true';
+{% else %}
+{% if ipv6 is defined and not ipv6|bool %} # ipv6 false
+Acquire::ForceIPv4 'true';
+{% else %} # ipv4 is on so...
+Acquire::ForceIPv4 'true';
+{% endif %}
+{% endif %}
+
+# and using a proxy for external network access if required
+{% if apt_proxy is defined %}
+Acquire::http::Proxy "{{apt_proxy.http}}";
+Acquire::https::Proxy "{{apt_proxy.https}}";
+{% endif %}

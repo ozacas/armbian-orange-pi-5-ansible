@@ -36,7 +36,7 @@ normal_user=acas
 #ssh_fs_mount_directory: <SSHFS directory to mount, ex: /mnt/shared> #Use by sshfs role
 #ssh_fs_mount_connection: <SSHFS connection, ex: user@host:/your/directory/shared> #Used by sshfs role
 #lgtv_configuration: <if you want to control your lgtv remotely, ex: '{"MyTV": {"key": "xxxxxxxxxxxxxxxxxx", "mac": "xx:xx:xx:xx:xx:xx", "ip": "192.168.N.N", "hostname": "192.168.N.N"}}'
-extra_software=["vim", "armbian-config", "dnsutils", "bind9-host", "net-tools", "nvme-cli"]
+extra_software=["vim", "armbian-config", "dnsutils", "bind9-host", "net-tools", "git", "nvme-cli"]
 ip_forwarding=no
 ipv6=yes
 
@@ -53,3 +53,9 @@ dns_primary_servers=['192.168.2.1']
 dns_fallback_servers=['1.1.1.1']
 dns_multicast=no
 dns_cache=yes
+
+# apt setup for [all] target hosts (will also obey ipv4/ipv6 settings)
+apt_install_recommends=yes
+apt_disable_esm=yes
+apt: { "mirror": "http://au.sbcmirror.org/armbian/apt", "distro_name": "noble"}
+apt_proxy: { "http": "http://192.168.2.1:3128"; "https": "http://192.168.2.1:3128" }

@@ -1,7 +1,6 @@
 ---
 
 # TODO FIXME... support nftables on modern systems
-
 - name: ensure relevant software is installed on target
   apt: 
     pkg:
@@ -24,3 +23,4 @@
     - is_sbc_rk35xx
     - firewall_script is not defined
     - firewall_ufw|default(False)|bool 
+
