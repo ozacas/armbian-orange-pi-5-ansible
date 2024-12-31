@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Tue Dec 31 13:26:00 2024 AEST by acas
+#  Generated Tue Dec 31 14:58:04 2024 AEST by acas
 #
 # files: * rock-5b-plus.fw /etc/fw/rock-5b-plus.fw
 #
@@ -347,27 +347,19 @@ script_body() {
 
     # ================ Table 'filter', rule set Policy
     # 
-    # Rule 0 (end0,end1)
+    # Rule 0 (enP4p65s0)
     # 
-    echo "Rule 0 (end0,end1)"
+    echo "Rule 0 (enP4p65s0)"
     # 
     # anti-spoofing rule - but only works because this kernel is 5.10 and hence the interfaces are correctly named eth0 and eth1
     $IPTABLES -N In_RULE_0
     for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i end0   -s $i_enP4p65s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
     for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i end1   -s $i_enP4p65s0   -j In_RULE_0 
-    done
-    for i_enP4p65s0 in $i_enP4p65s0_list
-    do
-    test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i end0   -s $i_enP4p65s0   -j In_RULE_0 
-    done
-    for i_enP4p65s0 in $i_enP4p65s0_list
-    do
-    test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i end1   -s $i_enP4p65s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
     $IPTABLES -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
     $IPTABLES -A In_RULE_0  -j DROP
@@ -498,7 +490,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Tue Dec 31 13:26:00 2024 by acas"
+        log "Activating firewall script generated Tue Dec 31 14:58:04 2024 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

@@ -11,6 +11,6 @@ Acquire::ForceIPv4 'true';
 
 # and using a proxy for external network access if required
 {% if apt_proxy is defined %}
-Acquire::http::Proxy "{{apt_proxy.http}}";
-Acquire::https::Proxy "{{apt_proxy.https}}";
+Acquire::http::Proxy "{{apt_proxy['http']}}";
+Acquire::https::Proxy "{{apt_proxy['https']}}";
 {% endif %}

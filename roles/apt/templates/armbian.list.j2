@@ -1,5 +1,5 @@
 {% if apt_armbian_mirror is not defined %}
 deb [signed-by=/usr/share/keyrings/armbian.gpg] http://au.sbcmirror.org/armbian/apt {{ansible_distribution_release|lower}} main {{ansible_distribution_release|lower}}-utils {{ansible_distribution_release|lower}}-desktop
 {% else %}
-deb [signed-by=/usr/share/keyrings/armbian.gpg] {{apt.mirror}} {{apt.distro_name|default('noble')}} {{apt.packages|default('main noble-utils noble-desktop') }}
+deb [signed-by=/usr/share/keyrings/armbian.gpg] {{apt['mirror']}} {{apt['distro_name']|default('noble')}} {{apt['packages']|default('main noble-utils noble-desktop') }}
 {% endif %}
