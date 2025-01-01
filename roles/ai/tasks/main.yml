@@ -1,0 +1,12 @@
+---
+
+- name: fail deployment if not vendor kernel and SBC
+  fail: msg="Vendor kernel (6.1.x recommended) must be used on RK35xx series chips for NPU support at this time"
+  when:
+    - not (is_sbc_rk35xx and is_kernel_vendor)
+ 
+- name: install rknn-toolkit2
+  include_tasks: "rknn2.yml"
+
+#- name: install rknn-llm also
+#  include_tasks: "rknn-llm.yml"

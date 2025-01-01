@@ -1,0 +1,76 @@
+---
+
+- name: ensure python3-pip is installed
+  apt: name=python3-pip state=present
+
+# set permissive umask for systems which have been hardened so that install can be used by anyone
+- name: pip3 install rknn-toolkit2
+  pip: name=rknn-toolkit2 state=present umask="0022"
+  environment:
+    PIP_BREAK_SYSTEM_PACKAGES: "1"
+
+- name: ensure ai_root folder exists iff specified
+  file: state=directory path="{{ai_root}}" mode="0750"
+  when:
+    - ai_root is defined
+
+- name: set ai_home fact
+  set_fact:
+    ai_home: "{{ai_root|default(lookup('env', 'HOME')) }}"
+
+- name: install model zoo into specified location (default HOME dir)
+  command: git clone https://github.com/airockchip/rknn_model_zoo.git 
+  args:
+    chdir: "{{ ai_home }}"
+    creates: "{{ ai_home }}/rknn_model_zoo/README.md"
+
+
+# although we installed the pip version, it doesnt seem to install the runtime shared lib so we do that now 
+- name: install rknn2 toolkit into {{ai_root}} so we can install runtime lib
+  command: git clone https://github.com/airockchip/rknn-toolkit2.git
+  args:
+    chdir: "{{ ai_home }}"
+    creates: "{{ ai_home }}/rknn-toolkit2/README.md"
+
+- name: ensure correct ownership
+  command: chown -R {{ai_user|default('root')}}:{{ai_group|default('root')}} "{{ai_home}}/rknn-toolkit2" "{{ai_home}}/rknn_model_zoo"
+
+# copy into required system dir for python code to find via dlopen()
+- name: copy librknnrt.so to /usr/lib64
+  copy: remote_src=yes src="{{ai_home}}/rknn-toolkit2/rknpu2/runtime/Linux/librknn_api/{{ansible_architecture}}/librknnrt.so" dest="/usr/lib64" owner=root group=root mode="0755" force=no
+
+- name: update shared object cache
+  command: /sbin/ldconfig
+
+- name: download test model and try test model conversion and execution
+  command: sh download_model.sh
+  become_user: "{{ai_user}}"
+  args:
+    chdir: "{{ai_home}}/rknn_model_zoo/examples/yolo11/model"
+  when:
+    - "ai_user is defined"
+
+- name: convert yolo11 model to verify correct deployment iff ai_user defined
+  command: python3 convert.py ../model/yolo11n.onnx {{ai_chipset|default('rk3588')}}
+  become_user: "{{ai_user}}"
+  args:
+    chdir: "{{ ai_home }}/rknn_model_zoo/examples/yolo11/python"
+  when:
+    - "ai_user is defined"
+
+- name: run yolo11 model to confirm correct NPU handling
+  command: python3 yolo11.py --model_path ../model/yolo11.rknn --target rk3588 --img_folder ../model/ --img_save
+  become_user: "{{ai_user}}"
+  args:
+    chdir: "{{ ai_home }}/rknn_model_zoo/examples/yolo11/python"
+  when:
+    - "ai_user is defined"
+  register: detection_results
+
+- assert:
+    that:
+      - "'person' in detection_results.stdout"
+      - "'bus' in detection_results.stdout"
+  when:
+    - "ai_user is defined"
+

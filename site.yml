@@ -52,6 +52,9 @@
     - role: multimedia
       when: 
         - "multimedia|default(False)|bool"
+    - role: ai
+      when:
+        - "ai|default(False)|bool"
 
 # desktop related roles
 - hosts: desktops
