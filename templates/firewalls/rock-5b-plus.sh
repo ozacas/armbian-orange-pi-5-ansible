@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Wed Jan  1 08:29:16 2025 AEST by acas
+#  Generated Fri Jan  3 09:17:53 2025 AEST by acas
 #
 # files: * rock-5b-plus.fw /etc/fw/rock-5b-plus.fw
 #
@@ -431,9 +431,9 @@ script_body() {
     echo "Rule 3 (global)"
     # 
     # permit connectivity from t6 to key internal LAN services
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,8080,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,8080,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,8080,22  -m state --state NEW  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
@@ -540,7 +540,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Wed Jan  1 08:29:16 2025 by acas"
+        log "Activating firewall script generated Fri Jan  3 09:17:53 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
