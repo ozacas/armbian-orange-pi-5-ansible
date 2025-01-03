@@ -1,0 +1,37 @@
+---
+
+- name: clone ezrkllm onto target system
+  command: git clone https://github.com/Pelochus/ezrknn-llm.git 
+  become_user: "{{ai_user|default('root')}}"
+  args:
+    chdir: "{{ai_home}}"
+    creates: "{{ai_home}}/ezrknn-llm/README.md" 
+
+- name: perform install
+  command: bash install.sh
+  args:
+    chdir: "{{ ai_home}}/ezrknn-llm/" 
+    creates: /usr/bin/rkllm
+  register: install_results
+  failed_when: False # install script does not set exit code so we check output below instead
+
+- fail: msg="Errors found during compilation of rkllm - see {{install_results}}"
+  when:
+    - "'error' in install_results.stdout|lower or 'error' in install_results.stderr|lower"
+
+- name: ensure python venv is present
+  apt: name=python{{ansible_python.version.major}}.{{ansible_python.version.minor}}-venv state=latest
+
+- name: clone gradio to ease learning curve
+  command: git clone https://github.com/c0zaut/RKLLM-Gradio.git
+  become_user: "{{ai_user|default('root')}}"
+  args:
+    chdir: "{{ai_home}}"
+    creates: "{{ai_home}}/rkllm-gradio/README.md"
+
+- name: setup venv for gradio
+  command: bash setup.sh
+  become_user: "{{ai_user|default('root')}}"
+  args:
+    chdir: "{{ai_home}}/rkllm-gradio/"
+

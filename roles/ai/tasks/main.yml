@@ -4,9 +4,44 @@
   fail: msg="Vendor kernel (6.1.x recommended) must be used on RK35xx series chips for NPU support at this time"
   when:
     - not (is_sbc_rk35xx and is_kernel_vendor)
+
+- name: run multimedia role if multimedia=no for this target since they share dependencies
+  include_role: name="multimedia"
+  when:
+    - "not multimedia|default(False)|bool"
  
+- name: ensure OpenCL is fully installed and working now that deps are done
+  block:
+  - apt: 
+      pkg:
+        - mesa-opencl-icd 
+        - clinfo
+      state: latest
+      update_cache: yes
+  - command: clinfo 
+    register: clinfo_output
+  - assert:
+      that:
+        - "'mali' in clinfo_output.stdout|lower"
+        - "'mesa' in clinfo_output.stdout|lower" 
+
+- name: set ai_home fact
+  set_fact:
+    ai_home: "{{ai_root|default(lookup('env', 'HOME')) }}"
+
+- name: install huggingface cli to download community models, but dont configure
+  pip: 
+    umask: "0022"
+    state: present 
+    name: "huggingface_hub[cli]"
+  environment:
+    PIP_BREAK_SYSTEM_PACKAGES: "1"
+
 - name: install rknn-toolkit2
   include_tasks: "rknn2.yml"
 
-#- name: install rknn-llm also
-#  include_tasks: "rknn-llm.yml"
+- name: install a custom fork to leverage rockchip capabilities
+  include_tasks: "ezrknn-llm.yml"
+
+- name: install llama.cpp
+  include_tasks: "llama-cpp.yml"

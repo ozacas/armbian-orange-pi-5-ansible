@@ -4,19 +4,19 @@
   apt: name=python3-pip state=present
 
 # set permissive umask for systems which have been hardened so that install can be used by anyone
-- name: pip3 install rknn-toolkit2
-  pip: name=rknn-toolkit2 state=present umask="0022"
+- name: pip3 install rknn-toolkit2 and transformers
+  pip: name="{{item}}" state=present umask="0022"
   environment:
     PIP_BREAK_SYSTEM_PACKAGES: "1"
+  with_items:
+    - rknn-toolkit2
+    - transformers
+    - torch
 
 - name: ensure ai_root folder exists iff specified
   file: state=directory path="{{ai_root}}" mode="0750"
   when:
     - ai_root is defined
-
-- name: set ai_home fact
-  set_fact:
-    ai_home: "{{ai_root|default(lookup('env', 'HOME')) }}"
 
 - name: install model zoo into specified location (default HOME dir)
   command: git clone https://github.com/airockchip/rknn_model_zoo.git 

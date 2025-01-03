@@ -1,0 +1,29 @@
+---
+
+- name: install llama.cpp
+  command: git clone https://github.com/ggerganov/llama.cpp.git
+  args:
+    chdir: "{{ ai_home }}"
+    creates: "{{ ai_home }}/llama.cpp/README.md"
+
+- name: ensure ownership is per ai_user and ai_group when set
+  command: chown -R "{{ai_user}}:{{ai_group|default('root')}}" "{{ai_home}}/llama.cpp"
+  when:
+    - "ai_user is defined"
+
+- name: ensure required packages are installed
+  apt:
+    pkg:
+      - cmake
+    state: latest
+
+# build as per https://github.com/ggerganov/llama.cpp/blob/master/docs/build.md
+- name: build according to llama build docs
+  shell: cmake -B build; cmake --build build --config Release -j $(nproc)
+  become_user: "{{ ai_user }}"
+  args:
+    chdir: "{{ ai_home }}/llama.cpp"
+    creates: "{{ ai_home }}/llama.cpp/build/bin/llama-run"
+  when:
+    - "ai_user is defined"
+
