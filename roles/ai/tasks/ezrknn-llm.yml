@@ -7,6 +7,8 @@
     chdir: "{{ai_home}}"
     creates: "{{ai_home}}/ezrknn-llm/README.md" 
 
+# TODO FIXME... this install script may fail: we've seen this due to rough edges in the code. If it does we'll try to
+# get ansible to patch the tree and then try again... one day
 - name: perform install
   command: bash install.sh
   args:
@@ -18,6 +20,9 @@
 - fail: msg="Errors found during compilation of rkllm - see {{install_results}}"
   when:
     - "'error' in install_results.stdout|lower or 'error' in install_results.stderr|lower"
+
+- name: install rkllm runtime shared object BUT DO NOT overwrite an existing lib
+  copy: remote_src=yes src="{{ai_home}}/ezrknn-llm/rkllm-runtime/runtime/Linux/librkllm_api/{{ansible_architecture}}/librkllmrt.so" dest=/usr/lib64/librkllmrt.so force=no
 
 - name: ensure python venv is present
   apt: name=python{{ansible_python.version.major}}.{{ansible_python.version.minor}}-venv state=latest
