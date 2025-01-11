@@ -3,11 +3,22 @@
 - name: add ssh user to video group without changing the password
   ansible.builtin.user: name="{{ansible_ssh_user}}" append=yes groups=video update_password=on_create
 
-- name: fetch deb package from github
+- name: fetch rkmppenc deb package from the author's github 
   command: wget -O /tmp/rkmppenc.deb https://github.com/rigaya/rkmppenc/releases/download/0.10/rkmppenc_0.10_Ubuntu{{ansible_distribution_major_version}}.04_arm64.deb
 
 - name: install rkmppenc
   command: dpkg -i /tmp/rkmppenc.deb
+
+- name: verify correct operation of rkmppenc and MPP service operation
+  block:
+    - command: rkmppenc --check-mppinfo
+      become: no # test low priv operations
+      register: mpp_info
+    - assert:
+        that:
+          - "'MPEG2' in mpp_info.stdout"
+          - "'HEVC' in mpp_info.stdout"
+          - "'mpp_service' in mpp_info.stdout"
 
 - name: cleanup
   file: path=/tmp/rkmppenc.deb state=absent

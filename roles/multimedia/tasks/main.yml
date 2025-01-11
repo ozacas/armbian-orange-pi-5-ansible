@@ -53,7 +53,7 @@
 
 - name: install hardware accel driver using user-specified config
   block:
-    - command: wget -O /tmp/libmali.deb https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-6f3d407/libmali-valhall-g610-{{mali_tag|default('g6p0')}}-wayland-gbm_{{libmali_version|default('1.9-1')}}_arm64.deb
+    - command: wget -O /tmp/libmali.deb https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-6f3d407/libmali-{{mali_generation|default('valhall-g610')}}-{{mali_tag|default('g6p0')}}-wayland-gbm_{{libmali_version|default('1.9-1')}}_arm64.deb
     - command: dpkg -i /tmp/libmali.deb
     - file: state=absent path=/tmp/libmali.deb
 
