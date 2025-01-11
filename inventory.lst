@@ -1,9 +1,9 @@
 [all]
-t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' 
-opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh 
-opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]'
-rock-5b-plus ansible_host=192.168.2.198 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes multimedia=yes ai=yes ai_user=acas ai_group=acas
-edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh
+t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' multimedia=yes docker=no
+opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  docker=yes
+opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes
+rock-5b-plus ansible_host=192.168.2.198 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes multimedia=yes ai=yes ai_user=acas ai_group=acas docker=yes
+edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh multimedia=yes
 
 [desktops]
 #t6
