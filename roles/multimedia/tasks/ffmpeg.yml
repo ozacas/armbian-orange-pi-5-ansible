@@ -1,0 +1,16 @@
+---
+
+- name: install ffmpeg v6 or later
+  apt: name='ffmpeg>=6.0' state=latest 
+
+- name: verify hwaccels are available
+  block:
+    - command: ffmepg -hide_banner -hwaccels
+      become: no
+      changed_when: False
+      register: ffmpeg_hwaccel
+    - assert:
+        that:
+          - '"opencl" in ffmpeg_hwaccel.stdout'
+          - '"rkmpp" in ffmpeg_hwaccel.stdout'
+          - '"drm" in ffmpeg_hwaccel.stdout'

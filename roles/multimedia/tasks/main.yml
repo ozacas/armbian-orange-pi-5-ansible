@@ -3,9 +3,7 @@
 - name: only ubuntu 22.04 or ubuntu 24.04 are supported
   fail: msg="Only Ubuntu 22.04 or 24.04 with the 6.1.x vendor kernel are supported at this time"
   when:
-    - is_sbc_rk35xx
-    - is_kernel_vendor
-    - ansible_distribution_major_version not in ('22', '24')
+    - (not is_sbc_rk35xx) or (not is_kernel_vendor) or (ansible_distribution_major_version not in ('22', '24'))
 
 - name: get list of running modules
   command: lsmod
@@ -103,4 +101,6 @@
 
 - name: install rkmppenc
   include_tasks: "rkmppenc.yml"
- 
+
+- name: install ffmpeg
+  include_tasks: "ffmpeg.yml" 
