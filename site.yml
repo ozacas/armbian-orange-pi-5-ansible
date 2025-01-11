@@ -39,7 +39,9 @@
     - user-ssh-authorized-key
     - extra-software
     - input-remapper
-    - docker
+    - role: docker
+      when:
+        - "docker|default(False)|bool"
     - sshfs
     - role: chrony
     - apt  # we do apt quite late since we need resolver, firewall and other stuff operational first
