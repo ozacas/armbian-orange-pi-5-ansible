@@ -1,11 +1,28 @@
 ---
 
 - name: only ubuntu 22.04 or ubuntu 24.04 are supported
-  fail: msg="Only Ubuntu 22.04 or 24.04 are supported at this time"
+  fail: msg="Only Ubuntu 22.04 or 24.04 with the 6.1.x vendor kernel are supported at this time"
   when:
     - is_sbc_rk35xx
     - is_kernel_vendor
     - ansible_distribution_major_version not in ('22', '24')
+
+- name: get list of running modules
+  command: lsmod
+  register: lsmod_output
+
+- name: fail deployment if panthor or panfrost module not loaded
+  fail: msg="{{inventory_hostname}} does not have either panfrost or panthor modules operational - must be manually fixed for safety"
+  when:
+    - "lsmod_output is failed or ('panfrost' not in lsmod_output.stdout and 'panthor' not in lsmod_output.stdout)"
+
+- name: add kisak mesa apt repo
+  template:
+    src: templates/mesa.list.j2
+    dest: /etc/apt/sources.list.d/kisak-ubuntu-kisak-mesa-noble.sources
+    owner: root
+    group: root
+    mode: "0644"
 
 - name: add multimedia apt repo
   template: 
@@ -15,8 +32,71 @@
     group: root
     mode: "0644"
 
-- name: update apt cache
+- name: update apt cache before we do any installs
   apt: update_cache=yes
+
+- name: set oddball packages to install based on ubuntu 24 and later systems
+  set_fact:
+    noble_packages: 
+      - "glmark2-x11"
+      - "glmark2-es2-x11"
+      - "libwidevinecdm0"
+  when:
+    - '"jammy" not in ansible_distribution_release|lower'
+
+- name: set oddball packages for jammy
+  set_fact:
+    jammy_packages: 
+      - "libwidevinecdm"
+  when:
+   - '"jammy" in ansible_distribution_release|lower'
+
+- name: install hardware accel driver using user-specified config
+  block:
+    - command: wget -O /tmp/libmali.deb https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-6f3d407/libmali-valhall-g610-{{mali_tag|default('g6p0')}}-wayland-gbm_{{libmali_version|default('1.9-1')}}_arm64.deb
+    - command: dpkg -i /tmp/libmali.deb
+    - file: state=absent path=/tmp/libmali.deb
+
+- name: get key packages down for all systems in an ordered manner
+  apt: 
+    state: latest
+    name: "{{item}}"
+    install_recommends: yes # avoid missing deps
+  with_items:
+      - libv4l-0   # must be installed before rockchip-multimedia
+      - libv4l-rkmpp
+      - libopengl0
+      - libgles2
+      - libglu1-mesa
+      - libegl-mesa0
+      - libgl1-mesa-dri
+      - libglx-mesa0
+      - mesa-utils  # needed for eglinfo below
+      - mesa-utils-extra
+      - glmark2
+      - "{{ jammy_packages|default([]) }}"
+      - "{{ noble_packages|default([]) }}"
+      - glmark2-wayland
+      - glmark2-es2-wayland 
+      - glmark2-es2
+      - "gstreamer1.0-rockchip1"
+      - rockchip-multimedia-config
+      - librga2 
+      - librockchip-mpp1 
+      - librockchip-vpu0 
+      - rockchip-mpp-demos
+      - mesa-vdpau-drivers  # mostly useful to those with external GPUs...
+      - mesa-va-drivers 
+      - mesa-vulkan-driver
+
+- name: run eglinfo to verify driver is operational or fail deployment fast
+  block:
+    - command: eglinfo
+      register: eglinfo_output
+    - assert:
+        that:
+          - '"panthor" in eglinfo_output.stdout or "panfrost" in eglinfo_output.stdout'
+          - '"kisak" in eglinfo_output.stdout'
 
 - name: install opencl
   include_tasks: "opencl.yml"

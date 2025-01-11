@@ -1,18 +1,5 @@
 ---
 
-- name: install key packages from liujianfeng1994/rockchip-multimedia/ubuntu apt repo
-  apt:
-    pkg:
-      - librockchip-mpp1
-      - rockchip-multimedia-config
-      - librga2
-
-- name: for video processing modules we need to install this too
-  block:
-    - command: wget -O /tmp/libmali.deb https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-6f3d407/libmali-valhall-g610-g13p0-wayland-gbm_1.9-1_arm64.deb
-    - command: dpkg -i /tmp/libmali.deb
-    - file: state=absent path=/tmp/libmali.deb 
-
 - name: add ssh user to video group without changing the password
   ansible.builtin.user: name="{{ansible_ssh_user}}" append=yes groups=video update_password=on_create
 
