@@ -51,6 +51,34 @@
     - role: nfs-server
       when:
         - nfs_exports is defined
+
+# on desktop hosts provision what was requested.. 
+#- hosts: desktops
+#  become: yes
+#  roles:
+#    - include_role: name="gdm-auto-login"
+#    - include_role: name="gdm-enable-wayland"
+#    - window-manager # sddm for kde, gdm for gnome
+#    - ubuntu-desktop-minimal
+#      when: 
+#        - "desktop == 'minimal' or desktop == 'ubuntu'"
+#    - kde-plasma
+#      when:
+#        - "desktop == 'kde-plasma' or desktop == 'kde'"
+#    - gnome
+#      when:
+#        - "desktop == 'gnome' 
+#    - firefox-no-snap
+#    - role: orangepi5-hdmi
+#      when:
+#        - is_armbian
+#        - is_sbc_rk35xx
+#        - is_sbc_opi5 or is_sbc_opi5_plus
+
+# provision multimedia after desktop since often dependent on X/Wayland etc.
+- hosts: all
+  become: yes
+  roles:
     - role: multimedia
       when: 
         - "multimedia|default(False)|bool"
@@ -58,26 +86,13 @@
       when:
         - "ai|default(False)|bool"
 
-# desktop related roles
-- hosts: desktops
-  become: yes
-  roles:
-    - ubuntu-desktop-minimal
-    - firefox-no-snap
-
 # only provision gdm if host is in appropriate group
 - hosts: desktops
   tasks:
-    - include_role: name="orangepi5-hdmi"
-      when:
-        - is_armbian
-        - is_sbc_rk35xx
-        - is_sbc_opi5 or is_sbc_opi5_plus
-    - include_role: name="gdm-auto-login"
-    - include_role: name="gdm-enable-wayland"
 
 # kodi group hosts get kodi installed at a host level using debian packages 
 - hosts: desktops kodi
+  become: yes
   roles:
     - hdmi-audio-dts-a52
     - kodi 

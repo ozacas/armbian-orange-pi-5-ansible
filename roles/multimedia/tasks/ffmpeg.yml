@@ -1,11 +1,11 @@
 ---
 
 - name: install ffmpeg v6 or later
-  apt: name='ffmpeg>=6.0' state=latest 
+  apt: name='ffmpeg>=6.0' state=latest  # >6 for MPP support
 
-- name: verify hwaccels are available
+- name: verify hwaccels are available (often /usr/local/bin is not in the install location so we set it)
   block:
-    - command: ffmepg -hide_banner -hwaccels
+    - shell: PATH=/bin:/usr/bin:/usr/sbin:/usr/local/bin ffmpeg -hide_banner -hwaccels
       become: no
       changed_when: False
       register: ffmpeg_hwaccel

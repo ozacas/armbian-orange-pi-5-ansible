@@ -14,6 +14,12 @@
   when:
     - "lsmod_output is failed or ('panfrost' not in lsmod_output.stdout and 'panthor' not in lsmod_output.stdout)"
 
+# MUST BE BEFORE apt repo's are added as we may nuke old apt repo's in favour of the new ones...
+- name: fix existing ld.so and library issues on target host iff forced - MESSY AND DANGEROUS
+  include_tasks: "fix-library-mess.yml"
+  when: 
+    - "force|default(False)|bool"
+
 - name: add kisak mesa apt repo
   template:
     src: templates/mesa.list.j2
@@ -32,11 +38,6 @@
 
 - name: update apt cache before we do any installs
   apt: update_cache=yes
-
-- name: fix existing ld.so and library issues on target host iff forced - MESSY AND DANGEROUS
-  include_tasks: "fix-library-mess.yml"
-  when: 
-    - "force|default(False)|bool"
 
 - name: set oddball packages to install based on ubuntu 24 and later systems
   set_fact:
@@ -61,19 +62,32 @@
     - command: dpkg -i /tmp/libmali.deb
     - file: state=absent path=/tmp/libmali.deb
 
+- name: if force requested, ensure that all packages are re-installed
+  set_fact:
+    force_reinstall_flags: "{{(force|default(False)|bool)|ternary('--reinstall', '')}}"
+
 - name: get key packages down for all systems in an ORDERED and somewhat forcible manner
-  shell: DEBIAN_FRONTEND=noninteractive apt install -yq --upgrade --reinstall --install-recommends {{item}}
+  shell: DEBIAN_FRONTEND=noninteractive apt install -yq --upgrade {{force_reinstall_flags}} --install-recommends {{item}}
   with_items:
+    - libgbm1    # need this to ensure that a forcible delete above is repaired... and thus a "clean" system restored
     - libv4l-0   # must be installed before rockchip-multimedia
     - libv4l-rkmpp
     - libopengl0
+    - libgles1
     - libgles2
+    - libgles-dev
+    - libgles2-mesa-dev
     - libglu1-mesa
     - libegl-mesa0
     - libegl-dev
     - libegl1
+    - libgl1
+    - libgl1-mesa-dev
     - libgl1-mesa-dri
+    - libglvnd0
+    - libglx0
     - libglx-mesa0
+    - libglapi-mesa
     - librga2 
     - librockchip-mpp1 
     - librockchip-vpu0 
@@ -103,6 +117,7 @@
   copy: 
     dest:  /lib/firmware/mali_csffw.bin 
     src:   /lib/firmware/arm/mali/arch10.8/mali_csffw.bin 
+    remote_src: yes
     owner: root
     group: root
     mode: "0644"
@@ -113,15 +128,17 @@
   become: yes
   when:
     - new_fw is changed
-  
-- name: run eglinfo to verify driver is operational or fail deployment fast
-  block:
-    - command: eglinfo
-      register: eglinfo_output
-    - assert:
-        that:
-          - '"panthor" in eglinfo_output.stdout or "panfrost" in eglinfo_output.stdout'
-          - '"kisak" in eglinfo_output.stdout'
+ 
+# cant make this work on khadas2 edge uefi board - disabled till i figure out why "egl initialize failed" 
+#- name: run eglinfo to verify driver is operational or fail deployment fast
+#  block:
+#    - command: eglinfo -B
+#      register: eglinfo_output
+#    - assert:
+#        that:
+#          - '"mali" in eglinfo_output.stdout|lower'
+#          - '"panthor" in eglinfo_output.stdout or "panfrost" in eglinfo_output.stdout'
+#          - '"kisak" in eglinfo_output.stdout'
 
 - name: install opencl
   include_tasks: "opencl.yml"

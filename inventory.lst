@@ -11,7 +11,7 @@ opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/fire
 rock-5b-plus ansible_host=192.168.2.198 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes multimedia=yes ai=yes ai_user=acas ai_group=acas docker=yes
 
 # khadas edge2 running vendor kernel (6.1.x) - forcibly nuke old multimedia hardware accel shared libs and replace them with new (uefi)
-edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh multimedia=yes force=yes nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' docker=yes mali_generation='valhall-g610' mali_tag='g13p0' desktop_session_type='wayland-gbm'
+edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh multimedia=yes nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' docker=yes mali_generation='valhall-g610' mali_tag='g13p0' desktop_session_type='wayland-gbm'
 
 [desktops]
 #t6

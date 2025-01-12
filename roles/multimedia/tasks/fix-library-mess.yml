@@ -10,7 +10,7 @@
 
 - name: forcibly fix crash due to library naming conflict and remove old hardware accel libraries
   block:
-    - shell: rm -f /etc/ld.so.conf.d/*.conf 
+    - shell: rm -f /etc/ld.so.conf.d/*.conf /etc/apt/sources.list.d/*oibaf* /etc/apt/sources.list.d/*kisak*
     - template:
         src: "templates/{{item.src}}"
         dest: "/etc/ld.so.conf.d/{{item.dest|basename}}" # only the basename may be set the path is deliberately fixed for safety
@@ -31,6 +31,9 @@
           - "libOpenGL.so.0"      
           - "libgbm.so.1"
           - "libEGL_mesa.so.0.0.0"  
+          - "libEGL.so.1.1.0"
+          - "libEGL.so.1"
+          - "libEGL.so"
           - "libGL.so.1"  
           - "libGLESv2.so.2"
           - "libGLX.so"           
