@@ -33,12 +33,18 @@
 - name: update apt cache before we do any installs
   apt: update_cache=yes
 
+- name: fix existing ld.so and library issues on target host iff forced - MESSY AND DANGEROUS
+  include_tasks: "fix-library-mess.yml"
+  when: 
+    - "force|default(False)|bool"
+
 - name: set oddball packages to install based on ubuntu 24 and later systems
   set_fact:
     noble_packages: 
+      - "libwidevinecdm0"
       - "glmark2-x11"
       - "glmark2-es2-x11"
-      - "libwidevinecdm0"
+      - "gstreamer1.0-rockchip1"
   when:
     - '"jammy" not in ansible_distribution_release|lower'
 
@@ -49,44 +55,65 @@
   when:
    - '"jammy" in ansible_distribution_release|lower'
 
-- name: install hardware accel driver using user-specified config
+- name: install hardware accel driver and firmware using user-specified config
   block:
-    - command: wget -O /tmp/libmali.deb https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-6f3d407/libmali-{{mali_generation|default('valhall-g610')}}-{{mali_tag|default('g6p0')}}-wayland-gbm_{{libmali_version|default('1.9-1')}}_arm64.deb
+    - command: wget -O /tmp/libmali.deb https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-6f3d407/libmali-{{mali_generation|default('valhall-g610')}}-{{mali_tag|default('g6p0')}}-{{desktop_session_type|default('wayland-gbm')}}_{{libmali_version|default('1.9-1')}}_arm64.deb
     - command: dpkg -i /tmp/libmali.deb
     - file: state=absent path=/tmp/libmali.deb
 
-- name: get key packages down for all systems in an ordered manner
-  apt: 
-    state: latest
-    name: "{{item}}"
-    install_recommends: yes # avoid missing deps
+- name: get key packages down for all systems in an ORDERED and somewhat forcible manner
+  shell: DEBIAN_FRONTEND=noninteractive apt install -yq --upgrade --reinstall --install-recommends {{item}}
   with_items:
-      - libv4l-0   # must be installed before rockchip-multimedia
-      - libv4l-rkmpp
-      - libopengl0
-      - libgles2
-      - libglu1-mesa
-      - libegl-mesa0
-      - libgl1-mesa-dri
-      - libglx-mesa0
-      - mesa-utils  # needed for eglinfo below
-      - mesa-utils-extra
-      - glmark2
-      - "{{ jammy_packages|default([]) }}"
-      - "{{ noble_packages|default([]) }}"
-      - glmark2-wayland
-      - glmark2-es2-wayland 
-      - glmark2-es2
-      - "gstreamer1.0-rockchip1"
-      - rockchip-multimedia-config
-      - librga2 
-      - librockchip-mpp1 
-      - librockchip-vpu0 
-      - rockchip-mpp-demos
-      - mesa-vdpau-drivers  # mostly useful to those with external GPUs...
-      - mesa-va-drivers 
-      - mesa-vulkan-driver
+    - libv4l-0   # must be installed before rockchip-multimedia
+    - libv4l-rkmpp
+    - libopengl0
+    - libgles2
+    - libglu1-mesa
+    - libegl-mesa0
+    - libegl-dev
+    - libegl1
+    - libgl1-mesa-dri
+    - libglx-mesa0
+    - librga2 
+    - librockchip-mpp1 
+    - librockchip-vpu0 
+    - mesa-utils  # needed for eglinfo below
+    - mesa-utils-extra
+    - glmark2
+    - "{{ jammy_packages|default([]) }}"
+    - "{{ noble_packages|default([]) }}"
+    - glmark2-wayland
+    - glmark2-es2-wayland 
+    - glmark2-es2
+    - rockchip-multimedia-config
+    - rockchip-mpp-demos
+    - mesa-vdpau-drivers  # mostly useful to those with external GPUs...
+    - mesa-va-drivers 
+    - mesa-vulkan-drivers
 
+- name: fail deployment iff armbian firmware package not installed
+  block:
+    - stat: path=/lib/firmware/arm/mali/arch10.8/mali_csffw.bin 
+      register: mali_fw
+    - fail: msg="Armbian Mali firmware package not installed, failure is certain"
+      when: 
+        - not mali_fw.stat.exists
+
+- name: prefer armbian firmware only when forced
+  copy: 
+    dest:  /lib/firmware/mali_csffw.bin 
+    src:   /lib/firmware/arm/mali/arch10.8/mali_csffw.bin 
+    owner: root
+    group: root
+    mode: "0644"
+  register: new_fw
+
+- name: reboot iff new firmware installed to activate it
+  reboot:
+  become: yes
+  when:
+    - new_fw is changed
+  
 - name: run eglinfo to verify driver is operational or fail deployment fast
   block:
     - command: eglinfo

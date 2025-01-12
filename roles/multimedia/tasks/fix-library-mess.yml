@@ -1,0 +1,51 @@
+---
+
+# libgbm.so comes from the mali gbm driver package, but also kde uses a different libgbm which causes kwin_wayland to crash as it finds the wrong library and the session (sddm)
+# to be terminated. To avoid this mess we take drastic action:
+# 1) alter /etc/ld.so.conf.d to specify a suitable library loading order nuking whatever is in there already
+# 2) nuke old libraries from years ago that may exist on the target but will interfere with the operation of the new packages we are installing
+#
+# although renaming the mali gbm library would be good, it probably causes supply chain headaches across other packages en masse... oh well
+# This code does nothing unless force=yes on the target host
+
+- name: forcibly fix crash due to library naming conflict and remove old hardware accel libraries
+  block:
+    - shell: rm -f /etc/ld.so.conf.d/*.conf 
+    - template:
+        src: "templates/{{item.src}}"
+        dest: "/etc/ld.so.conf.d/{{item.dest|basename}}" # only the basename may be set the path is deliberately fixed for safety
+        owner: root
+        group: root
+        mode: "0644"
+      with_items:
+        - { "src": "aarch64-linux-gnu.conf.j2", "dest": "aarch64-linux-gnu.conf" }
+        - { "src": "aarch64-mali.conf.j2", "dest": "aarch64-mali.conf" }
+        - { "src": "libc.conf.j2", "dest": "libc.conf" }
+    - set_fact:
+        libs_to_purge:
+          - "libEGL_mesa.so.0"      
+          - "libGL.so"    
+          - "libGL.so.1.7.0"  
+          - "libGLESv2.so.2.1.0"  
+          - "libGLX.so.0"      
+          - "libOpenGL.so.0"      
+          - "libgbm.so.1"
+          - "libEGL_mesa.so.0.0.0"  
+          - "libGL.so.1"  
+          - "libGLESv2.so.2"
+          - "libGLX.so"           
+          - "libGLX.so.0.0.0"
+          - "libOpenGL.so.0.0.0"  
+          - "libgbm.so.1.0.0"
+    - file: state=absent path="/usr/lib/{{item}}"
+      with_items:
+        - "{{libs_to_purge}}"
+    - file: state=absent path="/usr/lib/aarch64-linux-gnu/{{item}}"
+      with_items:
+        - "{{libs_to_purge}}"
+    - file: state=absent path="/usr/local/lib/aarch64-linux-gnu/{{item}}"
+      with_items:
+        - "{{libs_to_purge}}"
+    - command: /sbin/ldconfig
+  when:
+    - "force|default(False)|bool"
