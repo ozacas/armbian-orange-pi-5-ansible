@@ -23,8 +23,8 @@
 
 - name: ensure systemd knows about fstab changes, iff any
   block:
-    - name: notify systemd of changes
-      systemd: daemon_reload=yes
+    - name: notify systemd of changes and enable remote-fs since NFS is being used 
+      systemd: daemon_reload=yes enabled=yes name=remote-fs.target
     - name: remount filesytems explicitly during run to check for connectivity
       command: mount -av
   when:

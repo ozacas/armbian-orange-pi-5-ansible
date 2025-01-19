@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Mon Dec 30 20:50:41 2024 AEST by acas
+#  Generated Sat Jan 18 08:48:04 2025 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -342,6 +342,9 @@ script_body() {
     $IPTABLES -A INPUT   -m state --state ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -A OUTPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT 
+    # backup ssh access
+    $IPTABLES -A INPUT  -p tcp -m tcp  -s 192.168.2.1/255.255.255.255  --dport 22  -m state --state NEW,ESTABLISHED -j  ACCEPT 
+    $IPTABLES -A OUTPUT  -p tcp -m tcp  -d 192.168.2.1/255.255.255.255  --sport 22  -m state --state ESTABLISHED,RELATED -j ACCEPT 
     # drop packets that do not match any valid state and log them
     $IPTABLES -N drop_invalid
     $IPTABLES -A OUTPUT   -m state --state INVALID  -j drop_invalid 
@@ -397,8 +400,12 @@ script_body() {
     # 
     echo "Rule 3 (global)"
     # 
-    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 8096,8123,8096,8883  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 8096,8123,8096,8883,1883  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 8096,8123,8096,8883,1883  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 8096,8123,8096,8883,1883  -m state --state NEW  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
@@ -417,27 +424,31 @@ script_body() {
     # 
     echo "Rule 5 (global)"
     # 
-    # this rejects auth (ident) queries that remote
-    # mail relays may send to this server when it
-    # tries to send email out.
     for i_enP4p1s0 in $i_enP4p1s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT -p tcp -m tcp  -d $i_enP4p1s0   --dport 113  -j REJECT 
+    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -p tcp -m tcp  -s $i_enP4p1s0   --dport 1514:1515  -m state --state NEW  -j ACCEPT 
     done
-    $IPTABLES -A INPUT -p tcp -m tcp  --dport 113  -j REJECT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j ACCEPT
     # 
     # Rule 6 (global)
     # 
     echo "Rule 6 (global)"
     # 
-    $IPTABLES -N RULE_6
+    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    # 
+    # Rule 7 (global)
+    # 
+    echo "Rule 7 (global)"
+    # 
+    $IPTABLES -N RULE_7
     for i_enP4p1s0 in $i_enP4p1s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT  -d $i_enP4p1s0   -j RULE_6 
+    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT  -d $i_enP4p1s0   -j RULE_7 
     done
-    $IPTABLES -A INPUT  -j RULE_6
-    $IPTABLES -A RULE_6  -j LOG  --log-level info --log-prefix "RULE 6 -- DENY "
-    $IPTABLES -A RULE_6  -j DROP
+    $IPTABLES -A INPUT  -j RULE_7
+    $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
+    $IPTABLES -A RULE_7  -j DROP
 }
 
 ip_forward() {
@@ -494,7 +505,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Mon Dec 30 20:50:41 2024 by acas"
+        log "Activating firewall script generated Sat Jan 18 08:48:04 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

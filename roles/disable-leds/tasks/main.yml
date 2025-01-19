@@ -1,0 +1,8 @@
+---
+
+- name: disable LEDs at boot to reduce annoyance for rock 5b+
+  include_tasks: "rock5b-plus.yml"
+  when:
+    - is_sbc_rk35xx
+    - is_sbc_rock5b_plus
+    - "disable_leds|default(False)|bool"

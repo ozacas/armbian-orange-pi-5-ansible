@@ -1,0 +1,6 @@
+#!/bin/sh
+# disable flickering blue light on radxa rock5b plus board
+set -x
+echo none > /sys/class/leds/user-led2/trigger
+exit 0
+

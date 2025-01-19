@@ -1,0 +1,21 @@
+---
+
+- name: disable blue light immediately
+  shell: echo none > "/sys/class/leds/user-{{item}}/trigger"
+  with_items:
+    - led2
+
+# TODO FIXME... can we disable the green light... how?
+
+- name: and ensure a cron job is installed to do so every reboot
+  block:
+    - template: 
+        src: templates/rock-5b-plus.sh.j2
+        dest: /usr/local/sbin/disable-leds-rock5b-plus.sh
+        owner: root
+        group: root
+        mode: "0750"
+    - cron: 
+        special_time: reboot
+        job: /usr/local/sbin/disable-leds-rock5b-plus.sh
+        name: disable-leds

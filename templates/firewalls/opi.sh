@@ -4,11 +4,11 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Mon Dec 30 20:50:41 2024 AEST by acas
+#  Generated Mon Jan 13 17:59:15 2025 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
-# Compiled for iptables (any version)
+# Compiled for iptables 1.4.20
 #
 
 
@@ -127,36 +127,36 @@ check_tools() {
 reset_iptables_v4() {
   local list
 
-  $IPTABLES  -P OUTPUT  DROP
-  $IPTABLES  -P INPUT   DROP
-  $IPTABLES  -P FORWARD DROP
+  $IPTABLES -w -P OUTPUT  DROP
+  $IPTABLES -w -P INPUT   DROP
+  $IPTABLES -w -P FORWARD DROP
 
   while read table; do
-      list=$($IPTABLES  -t $table -L -n)
+      list=$($IPTABLES -w -t $table -L -n)
       printf "%s" "$list" | while read c chain rest; do
       if test "X$c" = "XChain" ; then
-        $IPTABLES  -t $table -F $chain
+        $IPTABLES -w -t $table -F $chain
       fi
       done
-      $IPTABLES  -t $table -X
+      $IPTABLES -w -t $table -X
   done < /proc/net/ip_tables_names
 }
 
 reset_iptables_v6() {
   local list
 
-  $IP6TABLES  -P OUTPUT  DROP
-  $IP6TABLES  -P INPUT   DROP
-  $IP6TABLES  -P FORWARD DROP
+  $IP6TABLES -w -P OUTPUT  DROP
+  $IP6TABLES -w -P INPUT   DROP
+  $IP6TABLES -w -P FORWARD DROP
 
   while read table; do
-      list=$($IP6TABLES  -t $table -L -n)
+      list=$($IP6TABLES -w -t $table -L -n)
       printf "%s" "$list" | while read c chain rest; do
       if test "X$c" = "XChain" ; then
-        $IP6TABLES  -t $table -F $chain
+        $IP6TABLES -w -t $table -F $chain
       fi
       done
-      $IP6TABLES  -t $table -X
+      $IP6TABLES -w -t $table -X
   done < /proc/net/ip6_tables_names
 }
 
@@ -340,16 +340,16 @@ script_body() {
 
     # ================ Table 'filter', automatic rules
     # accept established sessions
-    $IPTABLES -A INPUT   -m state --state ESTABLISHED,RELATED -j ACCEPT 
-    $IPTABLES -A OUTPUT  -m state --state ESTABLISHED,RELATED -j ACCEPT 
-    $IPTABLES -A FORWARD -m state --state ESTABLISHED,RELATED -j ACCEPT 
+    $IPTABLES -w -A INPUT   -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
+    $IPTABLES -w -A OUTPUT  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
+    $IPTABLES -w -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
     # drop packets that do not match any valid state and log them
-    $IPTABLES -N drop_invalid
-    $IPTABLES -A OUTPUT   -m state --state INVALID  -j drop_invalid 
-    $IPTABLES -A INPUT    -m state --state INVALID  -j drop_invalid 
-    $IPTABLES -A FORWARD  -m state --state INVALID  -j drop_invalid 
-    $IPTABLES -A drop_invalid -j LOG --log-level debug --log-prefix "INVALID state -- DENY "
-    $IPTABLES -A drop_invalid -j DROP
+    $IPTABLES -w -N drop_invalid
+    $IPTABLES -w -A OUTPUT   -m conntrack --ctstate INVALID  -j drop_invalid 
+    $IPTABLES -w -A INPUT    -m conntrack --ctstate INVALID  -j drop_invalid 
+    $IPTABLES -w -A FORWARD  -m conntrack --ctstate INVALID  -j drop_invalid 
+    $IPTABLES -w -A drop_invalid -j LOG --log-level debug --log-prefix "INVALID state -- DENY "
+    $IPTABLES -w -A drop_invalid -j DROP
 
 
 
@@ -363,48 +363,48 @@ script_body() {
     echo "Rule 0 (enP3p1s0,enP4p1s0)"
     # 
     # anti-spoofing rule
-    $IPTABLES -N In_RULE_0
+    $IPTABLES -w -N In_RULE_0
     for i_enP3p1s0 in $i_enP3p1s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -A INPUT -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p1s0" && $IPTABLES -w -A INPUT -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
     for i_enP4p1s0 in $i_enP4p1s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p1s0" && $IPTABLES -w -A INPUT -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
     done
     for i_enP3p1s0 in $i_enP3p1s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -A INPUT -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p1s0" && $IPTABLES -w -A INPUT -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
     for i_enP4p1s0 in $i_enP4p1s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p1s0" && $IPTABLES -w -A INPUT -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
     done
     for i_enP3p1s0 in $i_enP3p1s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -A FORWARD -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p1s0" && $IPTABLES -w -A FORWARD -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
     for i_enP4p1s0 in $i_enP4p1s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p1s0" && $IPTABLES -w -A FORWARD -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
     done
     for i_enP3p1s0 in $i_enP3p1s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p1s0" && $IPTABLES -w -A FORWARD -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
     done
     for i_enP4p1s0 in $i_enP4p1s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p1s0" && $IPTABLES -w -A FORWARD -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
     done
-    $IPTABLES -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
-    $IPTABLES -A In_RULE_0  -j DROP
+    $IPTABLES -w -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
+    $IPTABLES -w -A In_RULE_0  -j DROP
     # 
     # Rule 1 (lo)
     # 
     echo "Rule 1 (lo)"
     # 
-    $IPTABLES -A INPUT -i lo   -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -o lo   -m state --state NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -i lo   -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A OUTPUT -o lo   -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 2 (global)
     # 
@@ -414,58 +414,60 @@ script_body() {
     # Even if it does not log host names during its
     # normal operations, statistics scripts such as
     # webalizer need it for reporting.
-    $IPTABLES -A OUTPUT  -d 127.0.0.53   -m state --state NEW  -j ACCEPT
-    $IPTABLES -A FORWARD  -d 127.0.0.53   -m state --state NEW  -j ACCEPT
+    $IPTABLES -w -A OUTPUT  -d 127.0.0.53   -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD  -d 127.0.0.53   -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 3 (global)
     # 
     echo "Rule 3 (global)"
     # 
-    $IPTABLES -N RULE_3
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j RULE_3
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j RULE_3
-    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j RULE_3
-    $IPTABLES -A RULE_3  -j LOG  --log-level info --log-prefix "RULE 3 -- ACCEPT "
-    $IPTABLES -A RULE_3  -j ACCEPT
+    $IPTABLES -w -N RULE_3
+    $IPTABLES -w -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m conntrack --ctstate NEW  -j RULE_3
+    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m conntrack --ctstate NEW  -j RULE_3
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,22  -m conntrack --ctstate NEW  -j RULE_3
+    $IPTABLES -w -A RULE_3  -j LOG  --log-level info --log-prefix "RULE 3 -- ACCEPT "
+    $IPTABLES -w -A RULE_3  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
     echo "Rule 4 (global)"
     # 
-    $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   -d 192.168.2.146   --dport 1514:1515  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   -d 192.168.2.146   --dports 5601,55000  -m state --state NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
     echo "Rule 5 (global)"
     # 
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8096,8883,2049  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -w -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8096,8883,2049  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 6 (global)
     # 
     echo "Rule 6 (global)"
     # 
-    $IPTABLES -N Cid6381X2413238.0
-    $IPTABLES -A OUTPUT  -d 192.168.2.1   -m state --state NEW  -j Cid6381X2413238.0
-    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
-    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
-    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
-    $IPTABLES -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid6381X2413238.0 -p tcp -m tcp  --dport 53  -j ACCEPT
-    $IPTABLES -A Cid6381X2413238.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
+    $IPTABLES -w -N Cid6381X2413238.0
+    $IPTABLES -w -A OUTPUT  -d 192.168.2.1   -m conntrack --ctstate NEW  -j Cid6381X2413238.0
+    $IPTABLES -w -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 3  -j ACCEPT
+    $IPTABLES -w -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
+    $IPTABLES -w -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
+    $IPTABLES -w -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
+    $IPTABLES -w -A Cid6381X2413238.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -w -A Cid6381X2413238.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 7 (global)
     # 
     echo "Rule 7 (global)"
     # 
-    $IPTABLES -N RULE_7
-    $IPTABLES -A OUTPUT  -j RULE_7
-    $IPTABLES -A INPUT  -j RULE_7
-    $IPTABLES -A FORWARD  -j RULE_7
-    $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
-    $IPTABLES -A RULE_7  -j DROP
+    $IPTABLES -w -N RULE_7
+    $IPTABLES -w -A OUTPUT  -j RULE_7
+    $IPTABLES -w -A INPUT  -j RULE_7
+    $IPTABLES -w -A FORWARD  -j RULE_7
+    $IPTABLES -w -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
+    $IPTABLES -w -A RULE_7  -j DROP
 }
 
 ip_forward() {
@@ -485,9 +487,9 @@ block_action() {
 
 stop_action() {
     reset_all
-    $IPTABLES  -P OUTPUT  ACCEPT
-    $IPTABLES  -P INPUT   ACCEPT
-    $IPTABLES  -P FORWARD ACCEPT
+    $IPTABLES -w -P OUTPUT  ACCEPT
+    $IPTABLES -w -P INPUT   ACCEPT
+    $IPTABLES -w -P FORWARD ACCEPT
 }
 
 check_iptables() {
@@ -522,7 +524,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Mon Dec 30 20:50:41 2024 by acas"
+        log "Activating firewall script generated Mon Jan 13 17:59:15 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

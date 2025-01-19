@@ -62,12 +62,12 @@
     - command: dpkg -i /tmp/libmali.deb
     - file: state=absent path=/tmp/libmali.deb
 
-- name: if force requested, ensure that all packages are re-installed
+- name: if force requested, ensure that all packages are re-installed at latest available versions
   set_fact:
-    force_reinstall_flags: "{{(force|default(False)|bool)|ternary('--reinstall', '')}}"
+    force_reinstall_flags: "{{(force|default(False)|bool)|ternary('--upgrade --reinstall', '')}}"
 
 - name: get key packages down for all systems in an ORDERED and somewhat forcible manner
-  shell: DEBIAN_FRONTEND=noninteractive apt install -yq --upgrade {{force_reinstall_flags}} --install-recommends {{item}}
+  shell: DEBIAN_FRONTEND=noninteractive apt install -yq {{force_reinstall_flags}} --install-recommends {{item}}
   with_items:
     - libgbm1    # need this to ensure that a forcible delete above is repaired... and thus a "clean" system restored
     - libv4l-0   # must be installed before rockchip-multimedia
