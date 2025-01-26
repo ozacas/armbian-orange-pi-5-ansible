@@ -1,6 +1,6 @@
 [all]
 # nanopc t6 running ubuntu 24.04 vendor kernel
-t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' multimedia=yes docker=no mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g6p0-wayland-gbm_1.9-1_arm64.deb' cpu_governor=ondemand
+t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' multimedia=yes docker=no 
 
 # orange pi 5+ running ubuntu 24.04 edge kernel (6.12, uefi)
 opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  docker=yes cpu_governor=powersave
@@ -9,7 +9,7 @@ opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewa
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes
 
 # rock5b+ running 24.04 vendor kernel (6.1.x)
-rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes nfs_exports='[{"path": "/export/backup", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path":"/export", "cidr": "192.168.2.0/24"}, {"path": "/var/lib/tvheadend/recordings", "cidr": "192.168.2.0/24", "opts": "ro,async,no_subtree_check", "owner": "acas", "group": "acas"}]' docker=yes disable_leds=yes multimedia=yes ai=yes ai_user=acas ai_group=acas cpu_governor=schedutil 
+rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes nfs_exports='[{"path": "/export/backup", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path":"/export", "cidr": "192.168.2.0/24"}, {"path": "/var/lib/tvheadend/recordings", "cidr": "192.168.2.0/24", "opts": "ro,async,no_subtree_check", "owner": "acas", "group": "acas"}]' docker=yes disable_leds=yes ai=yes ai_user=acas ai_group=acas cpu_governor=schedutil multimedia=yes force=yes
 
 # khadas edge2 running vendor kernel (6.1.x) - forcibly nuke old multimedia hardware accel shared libs and replace them with new (uefi)
 edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' docker=yes multimedia=yes cpu_governor=schedutil
@@ -71,4 +71,5 @@ apt={"mirror": "http://au.sbcmirror.org/armbian/apt", "distro_name": "noble"}
 apt_proxy={"http": "http://192.168.2.1:3128", "https": "http://192.168.2.1:3128"}
 
 # multimedia download url for mali rockchip release
-mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g24p0-wayland-gbm_1.9-1_arm64.deb'
+#mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g24p0-wayland-gbm_1.9-1_arm64.deb'
+mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g6p0-wayland-gbm_1.9-1_arm64.deb'
