@@ -1,4 +1,4 @@
-ENABLE="{{is_enabled}}"
+ENABLE="{{is_enabled|string|lower}}"
 GOVERNOR="{{cpu_governor|default('ondemand')}}"
 # no lower limit
 MIN_SPEED="0" 
