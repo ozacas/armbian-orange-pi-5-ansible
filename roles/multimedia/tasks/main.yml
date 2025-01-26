@@ -56,9 +56,17 @@
   when:
    - '"jammy" in ansible_distribution_release|lower'
 
+- name: purge existing mali packages just in case something odd...
+  shell: DEBIAN_FRONTEND=noninteractive apt remove -y {{item}}
+  ignore_errors: yes  # ok if not found
+  with_items:
+    - libmali-valhall-g610-g13p0-wayland-gbm
+    - libmali-valhall-g610-g6p0-wayland-gbm
+    - libmali-valhall-g610-g24p0-wayland-gbm
+
 - name: install hardware accel driver and firmware using user-specified config
   block:
-    - command: wget -O /tmp/libmali.deb https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-6f3d407/libmali-{{mali_generation|default('valhall-g610')}}-{{mali_tag|default('g6p0')}}-{{desktop_session_type|default('wayland-gbm')}}_{{libmali_version|default('1.9-1')}}_arm64.deb
+    - command: wget -O /tmp/libmali.deb {{mali_url}}
     - command: dpkg -i /tmp/libmali.deb
     - file: state=absent path=/tmp/libmali.deb
 

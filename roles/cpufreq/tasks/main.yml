@@ -1,0 +1,23 @@
+---
+
+- name: identify kernel version
+  set_fact:
+    kernel_major: "{{ ansible_kernel |regex_search('^(\\d+).(\\d+).', '\\1') | first |int}}"
+    kernel_minor: "{{ ansible_kernel |regex_search('^(\\d+).(\\d+).', '\\2') | first |int}}"
+
+
+# cpufreq is disabled in most armbian builds due to being deprecated for some time
+# so refuse to do anything more if it is not enabled on the target
+- name: identify available governors
+  command: cat /sys/bus/cpu/devices/cpu0/cpufreq/scaling_available_governors # works on Rock 5B+ and NanoPC T6 (6.1.x)
+  ignore_errors: yes
+  register: available_governors
+
+- name: setup target if governors are available
+  block:
+    - debug: msg="WARNING WARNING - {{inventory_hostname}} does not have working linux support for CPU governor"
+      when: available_governors is failed
+    - include_tasks: "setup_cpufrequtils.yml"
+      when: available_governors is success
+    - include_tasks: "disable_cpufrequtils.yml"
+      when: available_governors is failed

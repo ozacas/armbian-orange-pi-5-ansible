@@ -1,0 +1,32 @@
+---
+
+- name: ensure cpufrequtils is installed
+  apt: name=cpufrequtils state=latest
+
+- name: identify kernel version
+  set_fact:
+    kernel_major: "{{ ansible_kernel |regex_search('^(\\d+).(\\d+).', '\\1') | first |int}}"
+    kernel_minor: "{{ ansible_kernel |regex_search('^(\\d+).(\\d+).', '\\2') | first |int}}"
+
+- name: fail iff requested governor is not in list
+  fail: msg="Requested governor is not available on {{inventory_hostname}} - {{cpu_governor|default('ondemand')}}"
+  when: 
+    - "cpu_governor|default('ondemand') not in available_governors.stdout"
+
+- name: ensure default governor is set
+  template:
+    src: templates/cpufrequtils.default.j2
+    dest: /etc/default/cpufrequtils
+    owner: root
+    group: root
+    mode: "0644"
+  register: cpufreq_settings
+  vars:
+    is_enabled: True
+
+- name: ensure cpufrequtils is enabled and restarted
+  systemd: name=cpufrequtils.service state=restarted enabled=yes masked=no daemon_reload=yes
+
+- name: reboot target iff cpufreq settings are changed
+  reboot:
+  when: cpufreq_settings is changed

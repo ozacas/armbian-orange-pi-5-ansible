@@ -1,0 +1,22 @@
+---
+
+# if previously enabled, we must unwind...
+
+- name: disable defaults
+  template:
+    src: templates/cpufrequtils.default.j2
+    dest: /etc/default/cpufrequtils
+    backup: yes
+    owner: root
+    group: root
+    mode: "0644"
+  register: cpufrequtils_settings
+  vars:
+    is_enabled: False
+
+- name: disable service
+  systemd: name=cpufrequtils state=stopped enabled=no daemon_reload=yes
+
+- name: reboot if disabled changed state of system
+  reboot:
+  when: cpufrequtils_settings is changed

@@ -54,6 +54,9 @@
     - role: disable-leds
       when:
         - disable_leds is defined
+    - role: cpufreq
+      when:
+        - cpu_governor is defined
 
 # on desktop hosts provision what was requested.. 
 #- hosts: desktops
