@@ -1,6 +1,3 @@
 ENABLE="{{is_enabled|string|lower}}"
 GOVERNOR="{{cpu_governor|default('ondemand')}}"
-# no lower limit
-MIN_SPEED="0" 
-# no upper limit
-MAX_SPEED="0" 
+# no limits set as use of 0 tends to result in cpu performance stuck at the bottom limit
