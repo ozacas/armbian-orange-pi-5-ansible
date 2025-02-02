@@ -1,0 +1,16 @@
+---
+
+- name: stop service temporarily
+  systemd: name=vault state=stopped daemon_reload=yes
+  become: yes
+
+- name: purge existing db
+  file: state=absent path={{item}}
+  become: yes
+  with_items:
+    - "/home/vault/data/raft"
+    - "/home/vault/data/vault.db"
+   
+- name: restart service
+  systemd: name=vault state=restarted 
+  become: yes

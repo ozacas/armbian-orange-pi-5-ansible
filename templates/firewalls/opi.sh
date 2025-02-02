@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Mon Jan 13 17:59:15 2025 AEST by acas
+#  Generated Sat Feb  1 15:20:01 2025 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
@@ -462,12 +462,20 @@ script_body() {
     # 
     echo "Rule 7 (global)"
     # 
-    $IPTABLES -w -N RULE_7
-    $IPTABLES -w -A OUTPUT  -j RULE_7
-    $IPTABLES -w -A INPUT  -j RULE_7
-    $IPTABLES -w -A FORWARD  -j RULE_7
-    $IPTABLES -w -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
-    $IPTABLES -w -A RULE_7  -j DROP
+    # accept vault traffic for firewalled lan and also cluster node comms between vault nodes (also originating from the lan)
+    $IPTABLES -w -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    # 
+    # Rule 8 (global)
+    # 
+    echo "Rule 8 (global)"
+    # 
+    $IPTABLES -w -N RULE_8
+    $IPTABLES -w -A OUTPUT  -j RULE_8
+    $IPTABLES -w -A INPUT  -j RULE_8
+    $IPTABLES -w -A FORWARD  -j RULE_8
+    $IPTABLES -w -A RULE_8  -j LOG  --log-level info --log-prefix "RULE 8 -- DENY "
+    $IPTABLES -w -A RULE_8  -j DROP
 }
 
 ip_forward() {
@@ -524,7 +532,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Mon Jan 13 17:59:15 2025 by acas"
+        log "Activating firewall script generated Sat Feb  1 15:20:01 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

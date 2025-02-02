@@ -109,6 +109,11 @@
     - role: lgtv
     - role: surround-sound-test
 
+- hosts: vault
+  any_errors_fatal: yes # failure of a node, means failure of the cluster...
+  roles:
+    - hashicorp-vault
+
 - hosts: wazuh_manager
   become: yes
   roles:

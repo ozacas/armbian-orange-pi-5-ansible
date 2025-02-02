@@ -1,21 +1,61 @@
 ---
 
+- name: gather facts
+  setup:
+
 - name: ensure required packages are present
   apt:
     pkg:
       - gpg
       - wget
- 
+  become: yes
+
 - name: add hashicorp vault repo to target hosts
-  command: wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  shell: umask 022; rm -f /usr/share/keyrings/hashicorp-archive-keyring.gpg; wget -O - https://apt.releases.hashicorp.com/gpg | gpg --batch --yes --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+  become: yes
+
+- name: load gpg with necessary pubkeys for superuser
+  command: gpg --recv-keys {{item}}
+  become: yes
+  with_items:
+    - "AA16FCBCA621E701"
 
 - name: ensure vault apt repo is installed
-  command: echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+  shell: umask 022; echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
+  become: yes
 
-- name: install vault
-  apt: update=yes name=vault state=latest
+- name: install vault CE unless vault_enterprise=yes
+  apt: update_cache=yes name={{vault_enterprise|default(False)|bool |ternary("vault-enterprise", "vault")}} state=latest
+  become: yes
+
+- name: install vault config from template
+  template:
+    src: templates/vault.hcl.j2
+    dest: /etc/vault.d/vault.hcl
+    owner: vault
+    group: vault
+    mode: "0640"
+  become: yes
+
+- name: setup server-side TLS and install onto each node ready for service
+  include_tasks: "tls.yml"
+
+- name: ensure /home/vault/data exists and is ready for the service to store data
+  file: state=directory path=/home/vault/data owner=vault group=vault mode="0750"
+  become: yes # so we can chown/grp
+
+- name: ensure systemd unit file is overwritten with suitable operational config
+  template:
+    src: templates/systemd.unit.j2
+    dest: /lib/systemd/system/vault.service
+    owner: root
+    group: root
+    mode: "0644"
+  become: yes
 
 - name: ensure systemd is ready and activate vault nodes
-  systemd: daemon_reload=yes masked=no enabled=yes state=restarted name=vault
+  systemd: daemon_reload=yes masked=no enabled=yes state=restarted name={{vault_enterprise|default(False)|bool|ternary("vault-enterprise", "vault")}}
+  become: yes
 
-
+- name: bootstrap vault cluster on one node to permit the others to join
+  include_tasks: "bootstrap.yml" 

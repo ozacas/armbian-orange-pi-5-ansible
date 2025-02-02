@@ -1,0 +1,67 @@
+---
+
+- name: setup TLS for vault service CA and 
+  delegate_to: localhost # NB: on host running ansible NOT vault node(s)
+  run_once: yes
+  become: no
+  block:
+    - file: state=directory path="{{ item.path }}" mode="{{item.mode|default('0755')}}"
+      with_items:
+        - {"path": "{{playbook_dir}}/roles/hashicorp-vault/files/tls", "mode": "0750" }
+        - {"path": "{{playbook_dir}}/roles/hashicorp-vault/files/tls/ca", "mode": "0750" }
+        - {"path": "{{playbook_dir}}/roles/hashicorp-vault/files/tls/server", "mode": "0750" }
+
+    # generate CA into private folder
+    - command: openssl req -nodes -new -x509 -days "{{vault_ca_days|default(3650)}}" -extensions v3_ca -keyout ca.key -out ca.crt
+      args:
+        chdir: "{{playbook_dir}}/roles/hashicorp-vault/files/tls/ca"
+#Country Name (2 letter code) [AU]:
+#State or Province Name (full name) [Some-State]:Queensland
+#Locality Name (eg, city) []:Brisbane
+#Organization Name (eg, company) [Internet Widgits Pty Ltd]:Vault Service DN
+#Organizational Unit Name (eg, section) []:
+#Common Name (e.g. server FQDN or YOUR name) []:mqtt.local
+#Email Address []:
+        stdin: |
+          {{vault_iso2_code|default('AU')}}
+          {{vault_province|default('Queensland')}}
+          {{vault_locality|default('Brisbane')}}
+          {{vault_dn |default('Vault Service DN')}}
+          vaultOU 
+          {{vault_frontend_fqdn |default('vault.lan')}}
+    
+    - name: generate service private key
+      command: openssl genrsa -out server.key 2048
+      args:
+        chdir: "{{playbook_dir}}/roles/hashicorp-vault/files/tls/server"
+
+    - name: generate certificate config
+      delegate_to: localhost
+      template:
+        src: templates/server.csr.j2
+        dest: "{{playbook_dir}}/roles/hashicorp-vault/files/tls/server/server.cnf"
+        mode: "0640"
+
+    - name: ... and server cert via CSR from CA
+      command:  openssl req -new -out server.csr -key server.key -config server.cnf
+      args:
+        chdir: "{{playbook_dir}}/roles/hashicorp-vault/files/tls/server"
+
+    - name: issue cert via CA we've just built
+      command: openssl x509 -req -in server.csr -extfile server.cnf -CA {{playbook_dir}}/roles/hashicorp-vault/files/tls/ca/ca.crt -CAkey {{playbook_dir}}/roles/hashicorp-vault/files/tls/ca/ca.key -CAcreateserial -out server.crt -days "{{vault_cert_days |default(3650)}}" -extensions req_ext
+      args:
+        chdir: "{{playbook_dir}}/roles/hashicorp-vault/files/tls/server"
+
+- name: ensure tls folder exists on server
+  shell: mkdir -p /etc/vault.d/tls/server; chown -R vault:vault /etc/vault.d/tls
+  become: yes
+
+- name: install TLS into each node in the correct location for the server to use
+  copy: remote_src=no src={{item.src}} dest={{item.dest}} owner=vault group=vault mode="{{ item.mode |default('0644') }}"
+  become: yes
+  with_items: 
+    - { "src": "{{playbook_dir}}/roles/hashicorp-vault/files/tls/server/server.crt", "dest": "/etc/vault.d/tls/server/server.crt" }
+    - { "src": "{{playbook_dir}}/roles/hashicorp-vault/files/tls/server/server.key", "dest": "/etc/vault.d/tls/server/server.key", "mode": "0400" }
+    - { "src": "{{playbook_dir}}/roles/hashicorp-vault/files/tls/ca/ca.crt", "dest": "/etc/vault.d/tls/server/ca.crt" }
+
+ 

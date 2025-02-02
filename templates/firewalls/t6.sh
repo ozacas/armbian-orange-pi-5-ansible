@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Fri Jan 17 21:10:02 2025 AEST by acas
+#  Generated Sat Feb  1 15:20:02 2025 AEST by acas
 #
 # files: * t6.fw /etc/t6.fw
 #
@@ -498,12 +498,20 @@ script_body() {
     # 
     echo "Rule 8 (global)"
     # 
-    $IPTABLES -N RULE_8
-    $IPTABLES -A OUTPUT  -j RULE_8
-    $IPTABLES -A INPUT  -j RULE_8
-    $IPTABLES -A FORWARD  -j RULE_8
-    $IPTABLES -A RULE_8  -j LOG  --log-level info --log-prefix "RULE 8 -- DENY "
-    $IPTABLES -A RULE_8  -j DROP
+    # accept vault traffic for firewalled lan and also cluster node comms between vault nodes (also originating from the lan)
+    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    # 
+    # Rule 9 (global)
+    # 
+    echo "Rule 9 (global)"
+    # 
+    $IPTABLES -N RULE_9
+    $IPTABLES -A OUTPUT  -j RULE_9
+    $IPTABLES -A INPUT  -j RULE_9
+    $IPTABLES -A FORWARD  -j RULE_9
+    $IPTABLES -A RULE_9  -j LOG  --log-level info --log-prefix "RULE 9 -- DENY "
+    $IPTABLES -A RULE_9  -j DROP
 }
 
 ip_forward() {
@@ -560,7 +568,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Fri Jan 17 21:10:02 2025 by acas"
+        log "Activating firewall script generated Sat Feb  1 15:20:02 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

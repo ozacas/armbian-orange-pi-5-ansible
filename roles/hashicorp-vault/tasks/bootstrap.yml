@@ -1,0 +1,63 @@
+---
+
+# cleanup from a previous run... incl. cancel a previous failed initialized vault
+- include_tasks: "fresh_start.yml"
+
+- name: verify vault is sealed
+  shell: vault status | grep -e '^\s*Sealed'
+  environment:
+    VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
+  become: yes
+  become_user: vault
+  register: vault_status
+
+#- debug: var=vault_status
+
+- fail: msg="Vault node {{inventory_hostname}} is not sealed as expected"
+  when:
+    - "'true' not in vault_status.stdout|lower"
+
+- name: init one node in the cluster
+  command: vault operator init 
+  environment:
+    VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
+  become: yes
+  become_user: vault
+  register: vault_init
+
+- debug: var=vault_init
+
+- set_fact: 
+    root_token: "{{ vault_init.stdout |regex_search('^\\s*Initial Root Token:\\s*(\\S+)', '\\1', flatten=True, multiline=True) |list |first}}"
+    unseal_keys: "{{ vault_init.stdout |regex_findall('\\S{40,45}', multiline=True) }}"
+
+- debug: var=unseal_keys
+
+- debug: var=root_token
+
+- command: vault operator unseal {{item}}
+  environment:
+    VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
+    VAULT_TOKEN: "{{ root_token }}"
+  #no_log: yes
+  with_items:
+    - "{{ unseal_keys[0] }}"
+    - "{{ unseal_keys[1] }}"
+    - "{{ unseal_keys[2] }}"
+  become: yes
+  become_user: vault
+
+- set_fact:
+    arbitrary_leader: "{{groups['vault'][0]}}"
+
+# join to the leader node (first vault node listed in inventory)
+- command: vault operator raft join https://{{hostvars[arbitrary_leader].vault_hostname|default(arbitrary_leader)}}:8200
+  environment:
+    VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
+    VAULT_TOKEN: "{{ root_token }}"
+  become: yes
+  become_user: vault

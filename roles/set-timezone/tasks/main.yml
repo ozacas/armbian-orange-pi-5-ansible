@@ -1,5 +1,12 @@
+---
+
+- name: ensure required programs installed since timezone module below needs them...
+  apt: name=util-linux-extra state=latest
 
 - name: set timezone 
-  timezone:
-    name: '{{ timezone }}'
+  command: timedatectl set-timezone {{timezone}}
+  become: yes
+  # fails on my system due to 'UTC' versus 'Etc/UTC' problem...
+  #timezone:
+  #  name: '{{ timezone }}'
 

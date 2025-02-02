@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Jan 18 08:48:04 2025 AEST by acas
+#  Generated Sat Feb  1 15:20:01 2025 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -434,6 +434,7 @@ script_body() {
     # 
     echo "Rule 6 (global)"
     # 
+    # accept user traffic to vault from redcliffe lan and also permit cluster comms
     $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
     $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
     # 
@@ -505,7 +506,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Jan 18 08:48:04 2025 by acas"
+        log "Activating firewall script generated Sat Feb  1 15:20:01 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

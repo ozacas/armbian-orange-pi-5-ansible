@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Fri Jan  3 09:17:53 2025 AEST by acas
+#  Generated Sun Jan 26 13:02:03 2025 AEST by acas
 #
 # files: * rock-5b-plus.fw /etc/fw/rock-5b-plus.fw
 #
@@ -476,12 +476,20 @@ script_body() {
     # 
     echo "Rule 7 (global)"
     # 
-    $IPTABLES -N RULE_7
-    $IPTABLES -A OUTPUT  -j RULE_7
-    $IPTABLES -A INPUT  -j RULE_7
-    $IPTABLES -A FORWARD  -j RULE_7
-    $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
-    $IPTABLES -A RULE_7  -j DROP
+    $IPTABLES -A OUTPUT -p udp -m udp  --dport 65001  -j DROP
+    $IPTABLES -A INPUT -p udp -m udp  --dport 65001  -j DROP
+    $IPTABLES -A FORWARD -p udp -m udp  --dport 65001  -j DROP
+    # 
+    # Rule 8 (global)
+    # 
+    echo "Rule 8 (global)"
+    # 
+    $IPTABLES -N RULE_8
+    $IPTABLES -A OUTPUT  -j RULE_8
+    $IPTABLES -A INPUT  -j RULE_8
+    $IPTABLES -A FORWARD  -j RULE_8
+    $IPTABLES -A RULE_8  -j LOG  --log-level info --log-prefix "RULE 8 -- DENY "
+    $IPTABLES -A RULE_8  -j DROP
 }
 
 ip_forward() {
@@ -540,7 +548,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Fri Jan  3 09:17:53 2025 by acas"
+        log "Activating firewall script generated Sun Jan 26 13:02:03 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

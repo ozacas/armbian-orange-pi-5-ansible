@@ -1,0 +1,33 @@
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions    = x509_ext
+req_extensions     = req_ext
+prompt             = no
+
+[req_distinguished_name]
+C = {{vault_iso2_code|default('AU')}}
+ST = {{vault_province|default('Queensland')}}
+L = {{vault_locality|default('Brisbane')}}
+O = {{vault_dn|default('Vault Service DN')}}
+OU = vaultOU
+CN = {{vault_fqdn|default('vault.lan')}}
+
+[ x509_ext ]
+subjectKeyIdentifier    = hash
+authorityKeyIdentifier  = keyid,issuer
+# You only need digitalSignature below. *If* you don't allow
+#   RSA Key transport (i.e., you use ephemeral cipher suites), then
+#   omit keyEncipherment because that's key transport.
+basicConstraints = CA:FALSE
+subjectAltName   = @alt_names
+nsComment        = "OpenSSL Generated Certificate"
+
+[req_ext]
+keyUsage = keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+{% for v in [vault_fqdn] + groups['vault'] %}
+DNS.{{loop.index}} = {{ hostvars[v]['vault_hostname'] |default(v) }}
+{% endfor %}
