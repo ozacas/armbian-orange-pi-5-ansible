@@ -3,13 +3,19 @@
 # cleanup from a previous run... incl. cancel a previous failed initialized vault
 - include_tasks: "fresh_start.yml"
 
-- name: verify vault is sealed
+- set_fact:
+    arbitrary_leader: "{{groups['vault'][0]}}"
+- set_fact:
+    leader_node: "{{hostvars[arbitrary_leader]['vault_hostname']|default(arbitrary_leader)}}"
+
+- name: verify every local node is sealed
   shell: vault status | grep -e '^\s*Sealed'
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
-    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
+    VAULT_ADDR: "https://{{ vault_node }}:8200"
   become: yes
   become_user: vault
+  changed_when: False
   register: vault_status
 
 #- debug: var=vault_status
@@ -22,7 +28,7 @@
   command: vault operator init 
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
-    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
+    VAULT_ADDR: "https://{{ vault_node }}:8200"
   become: yes
   become_user: vault
   register: vault_init
@@ -33,14 +39,13 @@
     root_token: "{{ vault_init.stdout |regex_search('^\\s*Initial Root Token:\\s*(\\S+)', '\\1', flatten=True, multiline=True) |list |first}}"
     unseal_keys: "{{ vault_init.stdout |regex_findall('\\S{40,45}', multiline=True) }}"
 
-- debug: var=unseal_keys
-
+#- debug: var=unseal_keys
 - debug: var=root_token
 
 - command: vault operator unseal {{item}}
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
-    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
+    VAULT_ADDR: "https://{{ vault_node }}:8200"
     VAULT_TOKEN: "{{ root_token }}"
   #no_log: yes
   with_items:
@@ -50,14 +55,41 @@
   become: yes
   become_user: vault
 
-- set_fact:
-    arbitrary_leader: "{{groups['vault'][0]}}"
+#- debug: var=vault_node
+#- debug: var=leader_node
 
 # join to the leader node (first vault node listed in inventory)
-- command: vault operator raft join https://{{hostvars[arbitrary_leader].vault_hostname|default(arbitrary_leader)}}:8200
+- command: vault operator raft join "https://{{vault_node}}:8200"
+  delegate_to: "{{arbitrary_leader}}"
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
-    VAULT_ADDR: "https://{{ hostvars[inventory_hostname].vault_hostname|default(inventory_hostname) }}:8200"
-    VAULT_TOKEN: "{{ root_token }}"
+    VAULT_ADDR: "https://{{ leader_node }}:8200"
+    VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
+    VAULT_SKIP_VERIFY: "true"  # avoid TLS validation problems prior to cluster setup
   become: yes
   become_user: vault
+  when: 
+    - 'inventory_hostname != arbitrary_leader'
+  register: join_results
+
+- debug: var=join_results
+
+- fail: msg="Unable to RAFT join {{inventory_hostname}} to vault cluster leader {{arbitrary_leader}}"
+  when:
+    - 'inventory_hostname != arbitrary_leader'
+    - '"Joined" not in item.stdout'
+    - '"true" not in item.stdout'
+  with_items:
+    - "{{ join_results }}"
+
+- command: vault operator raft autopilot state
+  run_once: yes
+  environment:
+    VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+    VAULT_ADDR: "https://{{ leader_node }}:8200"
+    VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
+  become: yes
+  become_user: vault
+  register: cluster_state
+
+- debug: var=cluster_state

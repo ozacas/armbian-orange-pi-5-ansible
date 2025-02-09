@@ -5,7 +5,10 @@ t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewall
 # orange pi 5+ running ubuntu 24.04 edge kernel (6.13, uefi, efi stub, devicetree)
 opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  docker=yes 
 
-# orage pi 5+ running ubuntu 24.04 edge kernel (6.12, uefi) 
+# odroid n2 (only 2gb ram)
+n2 ansible_host=192.168.2.174 hostname=n2.lan firewall_script=templates/firewalls/n2.sh docker=no cpu_governor=ondemand harden=yes 
+
+# orange pi 5+ running ubuntu 24.04 edge kernel (6.12, uefi) 
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes
 
 # rock5b+ running 24.04 vendor kernel (6.1.x)
@@ -30,7 +33,7 @@ edge
 [vault]
 opi vault_hostname=opi.lan vault_api=192.168.2.146 # will appear as alternate name on the vault cert
 opi2 vault_hostname=opi2.lan vault_api=192.168.2.173
-t6 vault_hostname=t6.lan vault_api=192.168.2.193
+rock-5b-plus vault_hostname=rock-5b-plus.lan vault_api=192.168.2.149
 
 [vault:vars]
 vault_fqdn=vault.lan
@@ -48,7 +51,7 @@ tls_cert_days=3650
 tls_ca_days=3650 
 
 [all:vars]
-ansible_ssh_user=acas
+ansible_user=acas
 timezone=UTC
 normal_user=acas
 #user_ssh_authorized_key=

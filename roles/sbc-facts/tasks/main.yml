@@ -5,8 +5,8 @@
 
 - name: run dmidecode for detailed platform info
   command: dmidecode 
-  register: dmidecode_output
   become: yes
+  register: dmidecode_output
 
 # TODO FIXME... probably could use ansible_facts for this
 - name: run programs to get key information about target system
@@ -37,24 +37,27 @@
 - name: set facts for target system
   set_fact:
     is_kernel_vendor: "{{ '-vendor-' in kernel_info.stdout }}"
-    is_kernel_edge: "{{ '-edge-' in kernel_info.stdout }}"
-    is_sbc_rk35xx: "{{ 'rk35xx' in kernel_info.stdout|lower or 'rk35' in dmidecode_output.stdout }}"
     is_sbc_opi5_plus: "{{ 'opi5-plus' in board_info.stdout|lower or 'Orange Pi 5 Plus' in dmidecode_output.stdout|lower }}"
     # must be careful with matching dmidecode_output correctly for this SBC since it may accidentally match a 5+
     is_sbc_opi5: "{{ ('opi5' in board_info.stdout|lower and not 'opi5-' in board_info.stdout|lower) or (opi5_hits is success and opi5_hits.stdout != '0') }}"
     is_sbc_nanopc_t6: "{{ 'nanopct6' in board_info.stdout|lower }}"
     is_sbc_khadas_edge2: "{{ 'edge2' in board_info.stdout|lower }}"
     is_sbc_rock_5b_plus: "{{ 'rock5b+' in board_info.stdout|lower }}"
+    is_sbc_odroid_n2: "{{ 'n2' in board_info.stdout|lower }}"
     is_uefi: "{{ 'uefi' in board_info.stdout|lower }}"
 
 - name: debug
   debug: var=hostvars[inventory_hostname]
 
+- name: determine if rk35xx in a kludgy way...
+  set_fact:
+    is_sbc_rk35xx: "{{ is_sbc_opi5 or is_sbc_opi5_plus or is_sbc_rock_5b_plus or is_sbc_khadas_edge2 or is_sbc_nanopc_t6 }}"
+
 - name: fail if not rk35xx
   fail: msg="Not a supported SBC - must be rk3588 SBC"
   when: 
     - not is_armbian
-    - not (is_sbc_opi5 or is_sbc_opi5_plus)
+    - not is_sbc_rk35xx
 
 - name: set ubuntu fact
   set_fact:

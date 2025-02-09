@@ -2,12 +2,13 @@
 
 # ensure facts are available to implement custom logic per SBC
 - hosts: all
+  become: yes
   roles:
     - sbc-facts
 
 - name: harden targets iff requested BEFORE system gets changed too much
   hosts: all
-  become: no
+  become: yes
   handlers:
     - import_tasks: handlers/handlers.yml
   tasks:

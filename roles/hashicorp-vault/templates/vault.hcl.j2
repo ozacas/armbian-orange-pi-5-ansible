@@ -1,10 +1,10 @@
-cluster_addr  = "https://{{vault_fqdn|default('vault.lan')}}:8201"
+cluster_addr  = "https://{{vault_node}}:8201"
 api_addr      = "https://{{vault_fqdn|default('vault.lan')}}:8200"
 disable_mlock = true
 ui            = {{vault_ui|default(False)|bool|ternary('true', 'false')}}
 
 listener "tcp" {
-  address            = "0.0.0.0:8200"
+  address            = "{{vault_node}}:8200"
   tls_cert_file      = "/etc/vault.d/tls/server/server.crt"
   tls_key_file       = "/etc/vault.d/tls/server/server.key"
   tls_client_ca_file = "/etc/vault.d/tls/server/ca.crt"
@@ -16,13 +16,12 @@ storage "raft" {
 
 {% for v in groups['vault'] %}
   retry_join {
-    leader_tls_servername   = "{{hostvars[v]['vault_hostname']|default('vault.lan')}}"
-    leader_api_addr         = "https://{{hostvars[v]['vault_api']}}:8200" # must be IP for correct cluster comms
+    leader_tls_servername   = "{{hostvars[v]['vault_hostname']}}"
+    leader_api_addr         = "https://{{hostvars[v]['vault_hostname']}}:8200" 
     leader_ca_cert_file     = "/etc/vault.d/tls/server/ca.crt"
     leader_client_cert_file = "/etc/vault.d/tls/server/server.crt"
     leader_client_key_file  = "/etc/vault.d/tls/server/server.key"
   }
-
 {% endfor %}
 
 }

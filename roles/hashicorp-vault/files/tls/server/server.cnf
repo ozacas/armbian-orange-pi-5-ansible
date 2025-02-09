@@ -31,4 +31,4 @@ subjectAltName = @alt_names
 DNS.1 = vault.lan
 DNS.2 = opi.lan
 DNS.3 = opi2.lan
-DNS.4 = t6.lan
+DNS.4 = rock-5b-plus.lan

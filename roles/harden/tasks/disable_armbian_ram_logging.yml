@@ -13,8 +13,13 @@
         line: "#/dev/zram mount disabled by ansible harden role"
         regexp: ^/dev/zram
         state: absent
+      register: mounts_removed
     - systemd: name="{{item}}" state=stopped masked=yes enabled=no daemon_reload=yes
       with_items:
         - armbian-zram-config 
         - armbian-ram-logging
       ignore_errors: yes # ok if service not present on target
+    - systemd: daemon_reload=yes  # ensure systemd is aware of fstab changes
+      when: 
+        - mounts_removed is changed 
+        

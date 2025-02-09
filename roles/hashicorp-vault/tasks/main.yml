@@ -28,6 +28,9 @@
   apt: update_cache=yes name={{vault_enterprise|default(False)|bool |ternary("vault-enterprise", "vault")}} state=latest
   become: yes
 
+- set_fact:
+    vault_node:  "{{hostvars[inventory_hostname].vault_hostname|default(inventory_hostname)}}"
+
 - name: install vault config from template
   template:
     src: templates/vault.hcl.j2
