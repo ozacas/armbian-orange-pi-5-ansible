@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Feb  8 17:10:35 2025 AEST by acas
+#  Generated Sun Feb  9 17:05:54 2025 AEST by acas
 #
 # files: * n2.fw /etc/fw/n2.fw
 #
@@ -406,7 +406,7 @@ script_body() {
     $IPTABLES -A Cid8071X2368231.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
     $IPTABLES -A Cid8071X2368231.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
     $IPTABLES -A Cid8071X2368231.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid8071X2368231.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -A Cid8071X2368231.0 -p tcp -m tcp  -m multiport  --dports 53,3128  -j ACCEPT
     $IPTABLES -A Cid8071X2368231.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 4 (global)
@@ -495,7 +495,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Feb  8 17:10:35 2025 by acas"
+        log "Activating firewall script generated Sun Feb  9 17:05:54 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

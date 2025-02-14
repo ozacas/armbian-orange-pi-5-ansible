@@ -1,5 +1,5 @@
-cluster_addr  = "https://{{vault_node}}:8201"
-api_addr      = "https://{{vault_fqdn|default('vault.lan')}}:8200"
+cluster_addr  = "https://{{vault_hostname}}:8201"
+api_addr      = "https://{{vault_api}}:8200"
 disable_mlock = true
 ui            = {{vault_ui|default(False)|bool|ternary('true', 'false')}}
 
