@@ -45,18 +45,14 @@
   when:
     - inventory_hostname == arbitrary_leader
 
-#- debug: var=unseal_keys
-- debug: var=root_token
-  when:
-    - inventory_hostname == arbitrary_leader
-
 # 1. unseal the leader node first
 - command: vault operator unseal {{item}}
+  no_log: yes
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
     VAULT_ADDR: "https://{{ vault_hostname }}:8200"
     VAULT_TOKEN: "{{ hostvars[inventory_hostname].get('root_token') }}"
-  #no_log: yes
+  no_log: yes
   with_items:
     - "{{ unseal_keys[0] }}"
     - "{{ unseal_keys[1] }}"
@@ -71,6 +67,7 @@
 
 - name: raft join the follower nodes to the leader node
   command: vault operator raft join -leader-ca-cert=@/etc/vault.d/tls/server/ca.crt https://{{hostvars[arbitrary_leader]['vault_hostname']}}:8200
+  no_log: yes
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
     VAULT_ADDR: "https://{{ vault_hostname }}:8200"
@@ -84,7 +81,7 @@
 # finally unseal the follower nodes to ensure they join the cluster using the LEADER NODE's unseal keys
 - name: get follower nodes integrated onto the leader node to form the cluster
   command: vault operator unseal -non-interactive {{item}}
-  #no_log: yes
+  no_log: yes
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
     VAULT_ADDR: "https://{{ vault_hostname }}:8200"
@@ -103,6 +100,7 @@
 - name: check leader node cluster info
   command: vault operator raft autopilot state
   delegate_to: "{{ arbitrary_leader }}"
+  no_log: yes
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
     VAULT_ADDR:  "https://{{ hostvars[arbitrary_leader].get('vault_hostname') }}:8200"
@@ -112,4 +110,9 @@
   become_user: vault
   register: cluster_state
 
-- debug: var=cluster_state
+- name: debug key vault state for end user to get started with
+  block:
+    - debug: var=root_token
+    - debug: var=unseal_keys
+  when: 
+    - inventory_hostname == arbitrary_leader
