@@ -31,10 +31,11 @@
 - set_fact:
     vault_node:  "{{hostvars[inventory_hostname].vault_hostname|default(inventory_hostname)}}"
 
-- name: install vault config from template
+- name: install vault config from template with force to override old settings
   template:
     src: templates/vault.hcl.j2
     dest: /etc/vault.d/vault.hcl
+    force: yes
     owner: vault
     group: vault
     mode: "0640"
@@ -51,6 +52,7 @@
   template:
     src: templates/systemd.unit.j2
     dest: /lib/systemd/system/vault.service
+    force: yes
     owner: root
     group: root
     mode: "0644"

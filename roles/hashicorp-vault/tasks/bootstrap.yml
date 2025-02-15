@@ -31,17 +31,26 @@
     VAULT_ADDR: "https://{{ vault_hostname }}:8200"
   become: yes
   become_user: vault
+  when: 
+    - inventory_hostname == arbitrary_leader
   register: vault_init
 
 - debug: var=vault_init
+  when:
+    - inventory_hostname == arbitrary_leader
 
 - set_fact: 
     root_token: "{{ vault_init.stdout |regex_search('^\\s*Initial Root Token:\\s*(\\S+)', '\\1', flatten=True, multiline=True) |list |first}}"
     unseal_keys: "{{ vault_init.stdout |regex_findall('\\S{40,45}', multiline=True) }}"
+  when:
+    - inventory_hostname == arbitrary_leader
 
 #- debug: var=unseal_keys
 - debug: var=root_token
+  when:
+    - inventory_hostname == arbitrary_leader
 
+# 1. unseal the leader node first
 - command: vault operator unseal {{item}}
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
@@ -54,40 +63,51 @@
     - "{{ unseal_keys[2] }}"
   become: yes
   become_user: vault
+  when:
+    - inventory_hostname == arbitrary_leader
 
 #- debug: var=vault_node
 #- debug: var=leader_node
 
-# join to the leader node (first vault node listed in inventory)
-- command: vault operator raft join "https://{{vault_node}}:8200"
-  delegate_to: "{{arbitrary_leader}}"
+- name: raft join the follower nodes to the leader node
+  command: vault operator raft join -leader-ca-cert=@/etc/vault.d/tls/server/ca.crt https://{{hostvars[arbitrary_leader]['vault_hostname']}}:8200
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
-    VAULT_ADDR: "https://{{ hostvars[arbitrary_leader].get('vault_hostname') }}:8200"
-    VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
+    VAULT_ADDR: "https://{{ vault_hostname }}:8200"
     VAULT_SKIP_VERIFY: "1"  # avoid TLS validation problems prior to cluster setup
+    VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
+  when:
+    - inventory_hostname != arbitrary_leader
   become: yes
   become_user: vault
-  when: 
-    - 'inventory_hostname != arbitrary_leader'
-  register: join_results
 
-- debug: var=join_results
-
-- fail: msg="Unable to RAFT join {{inventory_hostname}} to vault cluster leader {{arbitrary_leader}}"
-  when:
-    - 'inventory_hostname != arbitrary_leader'
-    - '"Joined" not in item.stdout'
-    - '"true" not in item.stdout'
-  with_items:
-    - "{{ join_results }}"
-
-- command: vault operator raft autopilot state
-  run_once: yes
+# finally unseal the follower nodes to ensure they join the cluster using the LEADER NODE's unseal keys
+- name: get follower nodes integrated onto the leader node to form the cluster
+  command: vault operator unseal -non-interactive {{item}}
+  #no_log: yes
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
-    VAULT_ADDR: "https://{{ hostvars[arbitrary_leader].get('vault_hostname') }}:8200"
+    VAULT_ADDR: "https://{{ vault_hostname }}:8200"
+    VAULT_SKIP_VERIFY: "1"  # avoid TLS validation problems prior to cluster setup
+  with_items:
+    - "{{ hostvars[arbitrary_leader]['unseal_keys'][0] }}"
+    - "{{ hostvars[arbitrary_leader]['unseal_keys'][1] }}"
+    - "{{ hostvars[arbitrary_leader]['unseal_keys'][2] }}"
+  when:
+    - inventory_hostname != arbitrary_leader 
+  ignore_errors: yes
+  become: yes
+  become_user: vault
+
+# and then check the raft leader results to see new nodes
+- name: check leader node cluster info
+  command: vault operator raft autopilot state
+  delegate_to: "{{ arbitrary_leader }}"
+  environment:
+    VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+    VAULT_ADDR:  "https://{{ hostvars[arbitrary_leader].get('vault_hostname') }}:8200"
     VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
+    VAULT_SKIP_VERIFY: "1"
   become: yes
   become_user: vault
   register: cluster_state
