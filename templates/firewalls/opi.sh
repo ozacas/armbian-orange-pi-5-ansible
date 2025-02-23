@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sun Feb 23 09:43:38 2025 AEST by acas
+#  Generated Sun Feb 23 15:26:25 2025 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
@@ -430,9 +430,9 @@ script_body() {
     echo "Rule 4 (global)"
     # 
     $IPTABLES -w -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
-    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 9999,5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
     $IPTABLES -w -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
-    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 9999,5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
@@ -461,8 +461,11 @@ script_body() {
     # 
     # accept vault traffic for firewalled lan and also cluster node comms between vault nodes (also originating from the lan)
     $IPTABLES -w -A OUTPUT -p tcp -m tcp  --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A OUTPUT -p tcp -m tcp  --dport 9999  -m conntrack --ctstate NEW  -j ACCEPT
     $IPTABLES -w -A INPUT -p tcp -m tcp  --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -p tcp -m tcp  --dport 9999  -m conntrack --ctstate NEW  -j ACCEPT
     $IPTABLES -w -A FORWARD -p tcp -m tcp  --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  --dport 9999  -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 8 (global)
     # 
@@ -530,7 +533,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sun Feb 23 09:43:38 2025 by acas"
+        log "Activating firewall script generated Sun Feb 23 15:26:25 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
