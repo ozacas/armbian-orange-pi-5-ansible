@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Feb  1 15:20:01 2025 AEST by acas
+#  Generated Sun Feb 23 09:43:38 2025 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
@@ -289,13 +289,7 @@ load_modules() {
 
 verify_interfaces() {
     :
-    echo "Verifying interfaces: lo enP4p1s0 enP3p1s0"
-    for i in lo enP4p1s0 enP3p1s0 ; do
-        $IP link show "$i" > /dev/null 2>&1 || {
-            log "Interface $i does not exist"
-            exit 1
-        }
-    done
+    
 }
 
 prolog_commands() {
@@ -317,14 +311,14 @@ configure_interfaces() {
     :
     # Configure interfaces
     update_addresses_of_interface "lo 127.0.0.1/8" ""
-    getaddr enP4p1s0  i_enP4p1s0
-    getaddr6 enP4p1s0  i_enP4p1s0_v6
-    getnet enP4p1s0  i_enP4p1s0_network
-    getnet6 enP4p1s0  i_enP4p1s0_v6_network
-    getaddr enP3p1s0  i_enP3p1s0
-    getaddr6 enP3p1s0  i_enP3p1s0_v6
-    getnet enP3p1s0  i_enP3p1s0_network
-    getnet6 enP3p1s0  i_enP3p1s0_v6_network
+    getaddr enP4p65s0  i_enP4p65s0
+    getaddr6 enP4p65s0  i_enP4p65s0_v6
+    getnet enP4p65s0  i_enP4p65s0_network
+    getnet6 enP4p65s0  i_enP4p65s0_v6_network
+    getaddr enP3p49s0  i_enP3p49s0
+    getaddr6 enP3p49s0  i_enP3p49s0_v6
+    getnet enP3p49s0  i_enP3p49s0_network
+    getnet6 enP3p49s0  i_enP3p49s0_v6_network
 }
 
 script_body() {
@@ -343,6 +337,9 @@ script_body() {
     $IPTABLES -w -A INPUT   -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -w -A OUTPUT  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
     $IPTABLES -w -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
+    # backup ssh access
+    $IPTABLES -w -A INPUT  -p tcp -m tcp  -s 192.168.2.1/255.255.255.255  --dport 22  -m conntrack --ctstate NEW,ESTABLISHED -j  ACCEPT 
+    $IPTABLES -w -A OUTPUT  -p tcp -m tcp  -d 192.168.2.1/255.255.255.255  --sport 22  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT 
     # drop packets that do not match any valid state and log them
     $IPTABLES -w -N drop_invalid
     $IPTABLES -w -A OUTPUT   -m conntrack --ctstate INVALID  -j drop_invalid 
@@ -358,43 +355,43 @@ script_body() {
 
     # ================ Table 'filter', rule set Policy
     # 
-    # Rule 0 (enP3p1s0,enP4p1s0)
+    # Rule 0 (enP3p49s0,enP4p65s0)
     # 
-    echo "Rule 0 (enP3p1s0,enP4p1s0)"
+    echo "Rule 0 (enP3p49s0,enP4p65s0)"
     # 
     # anti-spoofing rule
     $IPTABLES -w -N In_RULE_0
-    for i_enP3p1s0 in $i_enP3p1s0_list
+    for i_enP3p49s0 in $i_enP3p49s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -w -A INPUT -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p49s0" && $IPTABLES -w -A INPUT -i enP3p49s0   -s $i_enP3p49s0   -j In_RULE_0 
     done
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -w -A INPUT -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -w -A INPUT -i enP3p49s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
-    for i_enP3p1s0 in $i_enP3p1s0_list
+    for i_enP3p49s0 in $i_enP3p49s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -w -A INPUT -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p49s0" && $IPTABLES -w -A INPUT -i enP4p65s0   -s $i_enP3p49s0   -j In_RULE_0 
     done
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -w -A INPUT -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -w -A INPUT -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
-    for i_enP3p1s0 in $i_enP3p1s0_list
+    for i_enP3p49s0 in $i_enP3p49s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -w -A FORWARD -i enP3p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p49s0" && $IPTABLES -w -A FORWARD -i enP3p49s0   -s $i_enP3p49s0   -j In_RULE_0 
     done
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -w -A FORWARD -i enP3p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -w -A FORWARD -i enP3p49s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
-    for i_enP3p1s0 in $i_enP3p1s0_list
+    for i_enP3p49s0 in $i_enP3p49s0_list
     do
-    test -n "$i_enP3p1s0" && $IPTABLES -w -A FORWARD -i enP4p1s0   -s $i_enP3p1s0   -j In_RULE_0 
+    test -n "$i_enP3p49s0" && $IPTABLES -w -A FORWARD -i enP4p65s0   -s $i_enP3p49s0   -j In_RULE_0 
     done
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -w -A FORWARD -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -w -A FORWARD -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
     $IPTABLES -w -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
     $IPTABLES -w -A In_RULE_0  -j DROP
@@ -433,9 +430,9 @@ script_body() {
     echo "Rule 4 (global)"
     # 
     $IPTABLES -w -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
-    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 9999,5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
     $IPTABLES -w -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
-    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 9999,5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
@@ -455,7 +452,7 @@ script_body() {
     $IPTABLES -w -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
     $IPTABLES -w -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
     $IPTABLES -w -A Cid6381X2413238.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -w -A Cid6381X2413238.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -w -A Cid6381X2413238.0 -p tcp -m tcp  -m multiport  --dports 53,3128  -j ACCEPT
     $IPTABLES -w -A Cid6381X2413238.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 7 (global)
@@ -463,8 +460,9 @@ script_body() {
     echo "Rule 7 (global)"
     # 
     # accept vault traffic for firewalled lan and also cluster node comms between vault nodes (also originating from the lan)
-    $IPTABLES -w -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
-    $IPTABLES -w -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A OUTPUT -p tcp -m tcp  --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -p tcp -m tcp  --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  --dport 8200:8300  -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 8 (global)
     # 
@@ -532,7 +530,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Feb  1 15:20:01 2025 by acas"
+        log "Activating firewall script generated Sun Feb 23 09:43:38 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

@@ -8,6 +8,8 @@
 - set_fact:
     leader_node: "{{hostvars[arbitrary_leader]['vault_hostname']|default(arbitrary_leader)}}"
 
+- debug: var=arbitrary_leader
+
 - name: verify every local node is sealed
   shell: vault status | grep -e '^\s*Sealed'
   environment:
@@ -26,18 +28,19 @@
 
 - name: init one node in the cluster
   command: vault operator init 
+  no_log: yes
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
     VAULT_ADDR: "https://{{ vault_hostname }}:8200"
   become: yes
   become_user: vault
-  when: 
-    - inventory_hostname == arbitrary_leader
   register: vault_init
-
-- debug: var=vault_init
   when:
     - inventory_hostname == arbitrary_leader
+
+#- debug: var=vault_init
+#  when:
+#    - inventory_hostname == arbitrary_leader
 
 - set_fact: 
     root_token: "{{ vault_init.stdout |regex_search('^\\s*Initial Root Token:\\s*(\\S+)', '\\1', flatten=True, multiline=True) |list |first}}"
@@ -46,27 +49,28 @@
     - inventory_hostname == arbitrary_leader
 
 # 1. unseal the leader node first
-- command: vault operator unseal {{item}}
-  no_log: yes
+- name: unseal the vault leader node ONLY 
+  command: vault operator unseal -non-interactive {{item}}
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
     VAULT_ADDR: "https://{{ vault_hostname }}:8200"
+    VAULT_SKIP_VERIFY: "1"
     VAULT_TOKEN: "{{ hostvars[inventory_hostname].get('root_token') }}"
   no_log: yes
   with_items:
     - "{{ unseal_keys[0] }}"
     - "{{ unseal_keys[1] }}"
     - "{{ unseal_keys[2] }}"
-  become: yes
-  become_user: vault
   when:
     - inventory_hostname == arbitrary_leader
+  become: yes
+  become_user: vault
 
 #- debug: var=vault_node
 #- debug: var=leader_node
 
 - name: raft join the follower nodes to the leader node
-  command: vault operator raft join -leader-ca-cert=@/etc/vault.d/tls/server/ca.crt https://{{hostvars[arbitrary_leader]['vault_hostname']}}:8200
+  command: vault operator raft join -leader-ca-cert=@/etc/vault.d/tls/server/ca.crt https://{{leader_node}}:8200
   no_log: yes
   environment:
     VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
@@ -77,6 +81,7 @@
     - inventory_hostname != arbitrary_leader
   become: yes
   become_user: vault
+
 
 # finally unseal the follower nodes to ensure they join the cluster using the LEADER NODE's unseal keys
 - name: get follower nodes integrated onto the leader node to form the cluster
@@ -92,23 +97,50 @@
     - "{{ hostvars[arbitrary_leader]['unseal_keys'][2] }}"
   when:
     - inventory_hostname != arbitrary_leader 
-  ignore_errors: yes
   become: yes
   become_user: vault
 
 # and then check the raft leader results to see new nodes
 - name: check leader node cluster info
-  command: vault operator raft autopilot state
-  delegate_to: "{{ arbitrary_leader }}"
-  no_log: yes
-  environment:
-    VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
-    VAULT_ADDR:  "https://{{ hostvars[arbitrary_leader].get('vault_hostname') }}:8200"
-    VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
-    VAULT_SKIP_VERIFY: "1"
-  become: yes
-  become_user: vault
-  register: cluster_state
+  block:
+    - name: wait for 10s for raft to setup...
+      pause: seconds=10
+    - command: vault operator raft autopilot state
+      delegate_to: "{{ arbitrary_leader }}"
+      no_log: yes 
+      environment:
+        VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+        VAULT_ADDR:  "https://{{ leader_node }}:8200"
+        VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
+        VAULT_SKIP_VERIFY: "1"
+      become: yes
+      become_user: vault
+      register: cluster_state
+    - debug: var=cluster_state
+    - set_fact:
+        node_names: "{{ cluster_state.stdout |regex_findall('^\\s*Name:\\s*(\\S+)', multiline=True) |list }}"
+    #- debug: var=node_names
+    - fail: msg="Not all nodes present on leader node... cluster formation failed!"
+      when: 
+        - node_names|length < ansible_play_hosts|length
+        - inventory_hostname == arbitrary_leader
+
+- name: fail deployment if any nodes are not unsealed
+  block:
+    - name: get current vault status for each node using the node
+      command: vault status
+      environment:
+        VAULT_CACERT: /etc/vault.d/tls/server/ca.crt
+        VAULT_ADDR:  "https://{{ vault_hostname }}:8200"
+        VAULT_TOKEN: "{{ hostvars[arbitrary_leader]['root_token'] }}"
+        VAULT_SKIP_VERIFY: "1"
+      register: seal_status
+      become_user: vault
+      become: yes
+    - assert:
+        that: 
+          - "'Sealed                  false' in seal_status.stdout"
+        fail_msg: "Vault node {{inventory_hostname}} should be unsealed, but is not. Deployment failed!"
 
 - name: debug key vault state for end user to get started with
   block:

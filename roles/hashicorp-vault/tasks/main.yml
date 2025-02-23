@@ -3,6 +3,11 @@
 - name: gather facts
   setup:
 
+- name: fail role if not enough nodes to make a cluster
+  fail: msg="There must be at least three nodes to make a vault cluster - got {{ansible_play_hosts}}"
+  when:
+    - ansible_play_hosts|length < 3
+ 
 - name: ensure required packages are present
   apt:
     pkg:

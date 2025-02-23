@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sun Jan 26 13:02:03 2025 AEST by acas
+#  Generated Sun Feb 23 09:45:43 2025 AEST by acas
 #
 # files: * rock-5b-plus.fw /etc/fw/rock-5b-plus.fw
 #
@@ -453,7 +453,7 @@ script_body() {
     $IPTABLES -A Cid6484X2570525.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
     $IPTABLES -A Cid6484X2570525.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
     $IPTABLES -A Cid6484X2570525.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid6484X2570525.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -A Cid6484X2570525.0 -p tcp -m tcp  -m multiport  --dports 53,3128  -j ACCEPT
     $IPTABLES -A Cid6484X2570525.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 6 (global)
@@ -484,12 +484,20 @@ script_body() {
     # 
     echo "Rule 8 (global)"
     # 
-    $IPTABLES -N RULE_8
-    $IPTABLES -A OUTPUT  -j RULE_8
-    $IPTABLES -A INPUT  -j RULE_8
-    $IPTABLES -A FORWARD  -j RULE_8
-    $IPTABLES -A RULE_8  -j LOG  --log-level info --log-prefix "RULE 8 -- DENY "
-    $IPTABLES -A RULE_8  -j DROP
+    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    # 
+    # Rule 9 (global)
+    # 
+    echo "Rule 9 (global)"
+    # 
+    $IPTABLES -N RULE_9
+    $IPTABLES -A OUTPUT  -j RULE_9
+    $IPTABLES -A INPUT  -j RULE_9
+    $IPTABLES -A FORWARD  -j RULE_9
+    $IPTABLES -A RULE_9  -j LOG  --log-level info --log-prefix "RULE 9 -- DENY "
+    $IPTABLES -A RULE_9  -j DROP
 }
 
 ip_forward() {
@@ -548,7 +556,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sun Jan 26 13:02:03 2025 by acas"
+        log "Activating firewall script generated Sun Feb 23 09:45:43 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

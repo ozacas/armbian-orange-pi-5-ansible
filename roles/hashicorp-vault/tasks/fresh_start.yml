@@ -4,7 +4,7 @@
   systemd: name=vault state=stopped daemon_reload=yes
   become: yes
 
-- name: purge existing db
+- name: purge existing local node data
   file: state=absent path={{item}}
   become: yes
   with_items:

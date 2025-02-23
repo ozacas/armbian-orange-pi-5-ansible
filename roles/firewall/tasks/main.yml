@@ -14,13 +14,11 @@
 - name: install firewall script and enable at boot if present for target
   include_tasks: "install_script.yml"
   when: 
-    - is_sbc_rk35xx or is_sbc_odroid_n2
     - firewall_script is defined 
 
 - name: install ufw if preferred by caller
   include_tasks: "install_ufw.yml"
   when:
-    - is_sbc_rk35xx
     - firewall_script is not defined
     - firewall_ufw|default(False)|bool 
 

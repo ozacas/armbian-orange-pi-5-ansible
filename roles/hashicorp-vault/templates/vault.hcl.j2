@@ -14,16 +14,16 @@ storage "raft" {
   path    = "/home/vault/data"
   node_id = "{{ 9999999 |random(seed=inventory_hostname)}}"
 
-#{% for v in groups['vault'] %}
-#  {% if v != inventory_hostname %}
-#  retry_join {
-#    leader_tls_servername   = "{{hostvars[v]['vault_hostname']}}"
-#    leader_api_addr         = "https://{{hostvars[v]['vault_hostname']}}:8200" 
-#    leader_ca_cert_file     = "/etc/vault.d/tls/server/ca.crt"
-#    leader_client_cert_file = "/etc/vault.d/tls/server/server.crt"
-#    leader_client_key_file  = "/etc/vault.d/tls/server/server.key"
-#  }
-#  {% endif %}
-#{% endfor %}
+{% for v in groups['vault'] %}
+  {% if v != inventory_hostname %}
+  retry_join {
+    leader_tls_servername   = "{{hostvars[v]['vault_hostname']}}"
+    leader_api_addr         = "https://{{hostvars[v]['vault_hostname']}}:8200" 
+    leader_ca_cert_file     = "/etc/vault.d/tls/server/ca.crt"
+    leader_client_cert_file = "/etc/vault.d/tls/server/server.crt"
+    leader_client_key_file  = "/etc/vault.d/tls/server/server.key"
+  }
+  {% endif %}
+{% endfor %}
 
 }

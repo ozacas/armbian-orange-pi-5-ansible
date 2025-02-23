@@ -51,7 +51,7 @@
 
 - name: determine if rk35xx in a kludgy way...
   set_fact:
-    is_sbc_rk35xx: "{{ is_sbc_opi5 or is_sbc_opi5_plus or is_sbc_rock_5b_plus or is_sbc_khadas_edge2 or is_sbc_nanopc_t6 }}"
+    is_sbc_rk35xx: "{{ is_sbc_opi5 or is_sbc_opi5_plus or is_sbc_opi5 or is_sbc_rock_5b_plus or is_sbc_khadas_edge2 or is_sbc_nanopc_t6 }}"
 
 - name: fail if not rk35xx
   fail: msg="Not a supported SBC - must be rk3588 SBC"

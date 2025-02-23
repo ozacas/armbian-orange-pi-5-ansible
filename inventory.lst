@@ -3,7 +3,7 @@
 t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' multimedia=no docker=no 
 
 # orange pi 5+ running ubuntu 24.04 edge kernel (6.13, uefi, efi stub, devicetree)
-opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  docker=yes 
+opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  # docker=yes 
 
 # odroid n2 (only 2gb ram)
 n2 ansible_host=192.168.2.174 hostname=n2.lan firewall_script=templates/firewalls/n2.sh docker=no cpu_governor=ondemand harden=yes 
@@ -12,7 +12,7 @@ n2 ansible_host=192.168.2.174 hostname=n2.lan firewall_script=templates/firewall
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes
 
 # rock5b+ running 24.04 vendor kernel (6.1.x)
-rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes nfs_exports='[{"path": "/export/backup", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path":"/export", "cidr": "192.168.2.0/24"}, {"path": "/var/lib/tvheadend/recordings", "cidr": "192.168.2.0/24", "opts": "ro,async,no_subtree_check", "owner": "acas", "group": "acas"}]' docker=yes disable_leds=yes # DISABLED now that it is done: ai=yes multimedia=yes force=yes ai_group=acas ai_user=acas mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g13p0-wayland-gbm_1.9-1_arm64.deb'
+rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes nfs_exports='[{"path": "/export/backup", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path":"/export", "cidr": "192.168.2.0/24"}, {"path": "/var/lib/tvheadend/recordings", "cidr": "192.168.2.0/24", "opts": "ro,async,no_subtree_check", "owner": "hts", "group": "hts"}]' docker=yes disable_leds=yes # DISABLED now that it is done: ai=yes multimedia=yes force=yes ai_group=acas ai_user=acas mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g13p0-wayland-gbm_1.9-1_arm64.deb'
 
 # khadas edge2 running vendor kernel (6.1.x) - forcibly nuke old multimedia hardware accel shared libs and replace them with new (uefi)
 edge ansible_host=192.168.2.242 hostname=edge.lan firewall_script=templates/firewalls/edge2.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' docker=yes multimedia=yes 
@@ -30,10 +30,11 @@ edge
 #opi
 
 # hashicorp vault nodes - must be at least 3 for a RAFT cluster
-[vault]
-opi vault_hostname=opi.lan vault_api=192.168.2.146 # will appear as alternate name on the vault cert
-opi2 vault_hostname=opi2.lan vault_api=192.168.2.173
-rock-5b-plus vault_hostname=rock-5b-plus.lan vault_api=192.168.2.149
+# NOW DISABLED SINCE WILL DESTROY EXISTING VAULT
+#[vault]
+#opi vault_hostname=opi.lan vault_api=192.168.2.146 # will appear as alternate name on the vault cert
+#opi2 vault_hostname=opi2.lan vault_api=192.168.2.173
+#rock-5b-plus vault_hostname=rock-5b-plus.lan vault_api=192.168.2.149
 
 [vault:vars]
 vault_fqdn=vault.lan

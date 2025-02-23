@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Feb  1 15:20:01 2025 AEST by acas
+#  Generated Sun Feb 23 09:45:42 2025 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -417,7 +417,7 @@ script_body() {
     $IPTABLES -A Cid6434X2437931.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
     $IPTABLES -A Cid6434X2437931.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
     $IPTABLES -A Cid6434X2437931.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid6434X2437931.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -A Cid6434X2437931.0 -p tcp -m tcp  -m multiport  --dports 53,3128  -j ACCEPT
     $IPTABLES -A Cid6434X2437931.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 5 (global)
@@ -435,8 +435,9 @@ script_body() {
     echo "Rule 6 (global)"
     # 
     # accept user traffic to vault from redcliffe lan and also permit cluster comms
-    $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j ACCEPT
     # 
     # Rule 7 (global)
     # 
@@ -506,7 +507,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Feb  1 15:20:01 2025 by acas"
+        log "Activating firewall script generated Sun Feb 23 09:45:42 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
