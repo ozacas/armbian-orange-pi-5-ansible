@@ -49,3 +49,8 @@
     owner: root
     group: root
     mode: "0644"
+
+- name: purge packages if requested by the user and hold them purged
+  include_tasks: "purge.yml"
+  when: 
+    - apt_purge is defined

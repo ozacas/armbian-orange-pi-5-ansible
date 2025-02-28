@@ -1,0 +1,11 @@
+---
+
+- name: apt purge listed packages
+  apt: state=absent name="{{item}}" purge=yes allow_change_held_packages=yes
+  with_items: 
+    - "{{apt_purge}}"
+
+- name: mark the listed packages as held
+  command: apt-mark hold {{item}}
+  with_items:
+    - "{{apt_purge}}"
