@@ -1,0 +1,61 @@
+---
+
+- name: ensure backup client ssh logins to server restrict the client to only its repo
+  block:
+    - command: vault kv get -format=json -field=data kv/hosts/{{item}}/backup_ssh_key
+      delegate_to: localhost 
+      environment:
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_SKIP_VERIFY: "1"
+        VAULT_TOKEN: "{{ lookup('env', vault_token_env_var) }}"  # usually $VAULT_TOKEN
+      register: backup_ssh_key
+
+    - set_fact:
+        sshkey_json: "{{backup_ssh_key.stdout|from_json}}"
+
+    - ansible.posix.authorized_key:
+        user: "{{backup_user|default('backup')}}"
+        key:  "{{ sshkey_json.public_key }}"
+        key_options: 'command="cd {{ backup_dir }}/repo/{{ item }};borg serve --restrict-to-path {{ backup_dir }}/repo/{{ item }}",restrict'
+        state: present
+
+- name: ensure server-side config exists for the specified client
+  block:
+    - stat: path={{backup_dir}}
+      delegate_to: rock-5b-plus
+      register: backup_dir_exists
+
+    - fail: msg="Backup directory {{backup_dir}} does not exist!"
+      when:
+         - not backup_dir_exists.stat.exists
+
+    - name: create backup directory for {{item}}
+      delegate_to: rock-5b-plus
+      file: state=directory path={{backup_dir}}/repo/{{item}} mode="0700" owner="{{ backup_user|default('backup') }}"
+
+    - name: "set encryption key for {{item}}"
+      set_fact:
+        encryption_key: "{{ lookup('password', '/dev/null', chars=['ascii_letters', 'digits'], length=64) }}"
+        passphrase:     "{{ lookup('password', '/dev/null', chars=['ascii_letters', 'digits'], length=32) }}" 
+
+    - name: "setup repo for {{item}}"
+      delegate_to: rock-5b-plus
+      command: borg init --encryption=keyfile {{backup_dir}}/repo/{{item}}
+      args:
+        creates: "{{backup_dir}}/repo/{{item}}/config"  # IDEMPOTENCE: skip init if this file already exists... ie. already init'ed 
+      environment:
+        BORG_PASSPHRASE: "{{ passphrase }}"
+      register: init_results
+
+    - name: save host backup details to vault for {{item}}
+      delegate_to: localhost
+      command: vault kv put kv/hosts/{{item}}/backups/encryption_key key={{encryption_key}} passphrase={{passphrase}} server_dir={{backup_dir}} backup_host={{item}} description="Backup repo encryption key on backup server and repo location for borg backups"
+      environment:
+        VAULT_ADDR: "{{ vault_addr |default('https://vault.lan:8200') }}"
+        VAULT_SKIP_VERIFY: "1"
+        VAULT_TOKEN: "{{ lookup('env', vault_token_env_var) }}"
+      become: no
+      when:
+        - init_results is success  # IDEMPOTENCE: only update vault if we actually did the init
+        - init_results is changed
+ 

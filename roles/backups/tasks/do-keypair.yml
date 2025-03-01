@@ -1,0 +1,27 @@
+---
+
+  - name: generate keypair 
+    community.crypto.openssh_keypair:
+      type: ed25519
+      comment: "Borg backup keypair between {{item}} and backup server for ssh comms"
+      path: "/tmp/keypair"
+      state: present
+    delegate_to: localhost
+    become: no
+    register: keypair 
+
+  - name: save ssh keypair for {{item}} to vault
+    command: vault kv put kv/hosts/{{item}}/backup_ssh_key public_key=@/tmp/keypair.pub private_key=@/tmp/keypair size={{keypair.size}} type={{keypair.type}} description="Borg backup keypair between {{item}} and backup server for ssh comms"
+    delegate_to: localhost
+    become: no
+    environment:
+      VAULT_ADDR: "{{ vault_addr }}"
+      VAULT_SKIP_VERIFY: "1"
+      VAULT_TOKEN: "{{ lookup('env', vault_token_env_var) }}"  # usually $VAULT_TOKEN
+
+  - file: path={{item}} state=absent
+    delegate_to: localhost
+    with_items:
+      - /tmp/keypair
+      - /tmp/keypair.pub
+

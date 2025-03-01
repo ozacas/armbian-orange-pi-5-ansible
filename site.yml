@@ -58,6 +58,9 @@
     - role: cpufreq
       when:
         - cpu_governor is defined
+    - role: backups
+      when: 
+        - "backup_server is defined or backup is defined"
 
 # on desktop hosts provision what was requested.. 
 #- hosts: desktops

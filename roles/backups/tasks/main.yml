@@ -5,6 +5,11 @@
   when:
     - "not (backup is defined or backup_server is defined)"
 
+- name: setup ssh keypairs and load into vault for safekeeping
+  include_tasks: "do-keypair.yml"      
+  with_items:
+    - "{{ backup_hosts }}"
+  
 - name: install borg client backup on target
   include_tasks: "borg-client.yml"
   when:

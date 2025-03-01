@@ -17,6 +17,23 @@ rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_scrip
 # khadas edge2 running vendor kernel (6.1.x) - forcibly nuke old multimedia hardware accel shared libs and replace them with new (uefi)
 edge ansible_host=192.168.2.242 hostname=edge.lan docker=yes firewall_script=templates/firewalls/edge2.sh 
 
+[backups]
+rock-5b-plus backup_server=yes backup_dir=/backups/borg 
+edge 
+opi 
+opi2 
+hplappie 
+t6 
+
+[backups:vars]
+backup=yes          # software and backup script installed on host in /usr/local/sbin/backup.sh for root to use
+backup_hosts='["edge.lan", "opi.lan", "opi2.lan", "hplappie.lan", "t6.lan"]'
+backup_repo="backup@rock-5b-plus.lan"
+backup_folders='["/home/acas"]'
+scheduled_backup=no # manual runs only
+vault_token_env_var="VAULT_TOKEN" # to get repo creds securely and manage ssh keys, must be setup prior to backup setup
+vault_addr="https://vault.lan:8200"
+
 [multimedia]
 edge multimedia=yes
 # DISABLED now that it is provisioned

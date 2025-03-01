@@ -3,6 +3,20 @@
 - name: install borg backup
   apt: name=borgbackup state=present
 
+- name: fail client if folders to backup at least is set as has at least one local folder for backup
+  fail: msg="Backup of {{inventory_hostname}} has no folders to backup!"
+  when:
+    - "backup_folders is not defined"
+    - "backup_folders|length < 1"
+
+- name: fail client if hostname not set, since we need it for looking up the correct vault secret
+  fail: msg="No hostname set for {{inventory_hostname}} - needed for looking up the correct vault secret"
+  when:
+    - hostname is not defined
+
+- name: setup backup user on target host
+  include_tasks: "init-client-ssh-keys.yml"
+
 - name: install backup script template with folders and opts set via ansible
   template:
     src: templates/backup.sh.j2
@@ -13,7 +27,7 @@
     group: root
     mode: "0750"
 
-- name: install cron job to run scheduled backup
+- name: install cron job to run scheduled backup when scheduled
   cron:
     name:   borgbackup
     state:  present
@@ -22,3 +36,5 @@
     hour:   "{{ backup_hour   |default(17 |random(seed=inventory_hostname)) }}"
     dow:    "{{ backup_dow    |default(6) }}"
     job:    "/usr/local/sbin/borgbackup.sh | logger -t borgbackup"
+  when:
+    - schedule_backup|default(False)|bool

@@ -3,28 +3,6 @@
 - name: ensure software is installed
   apt: name=borgbackup state=present
 
-- name: create strong password for low-priv borgbackup user on backup server
-  set_fact:
-    password: "{{ lookup('password', '/dev/null', chars=['ascii', 'digits'], length=32) }}"
-
-- name: save backup user details to vault
-  delegate_to: localhost
-  command: vault kv put kv/hosts/{{inventory_hostname}}/backup_user username=backups password={{password}} description="Backup user on {{inventory_hostname}}"
-  environment:
-    VAULT_ADDR: "{{ vault_addr |default('https://vault.lan:8200') }}"
-    VAULT_SKIP_VERIFY: "1"
-    VAULT_TOKEN: "{{ vault_token }}"
-  become: no
-
-- name: setup low priv backup user for saving backups to storage
-  user:
-    name: backups
-    state: present
-    shell: /bin/bash
-    password: "{{ password | password_hash('sha512') }}"
-    create_group: yes
-    append: yes
-
 - stat: path={{backup_dir}}
   register: backup_dir_exists
 
@@ -32,9 +10,54 @@
   when:
     - not backup_dir_exists.stat.exists
 
-- name: initialise repo in the designated location
-  block:
-    - include_tasks: "init-repo-for-backup-host.yml"
-      with_items:
-        - "{{ backup_hosts }}"
+- file: state=directory path="{{backup_dir}}" owner="{{ backup_user |default('backup')}}"
+- file: state=directory path="{{backup_dir}}/.ssh" owner="{{ backup_user |default('backup')}}"
 
+- name: create strong password for low-priv backup user on backup server
+  set_fact:
+    password: "{{ lookup('password', '/dev/null', chars=['ascii', 'digits'], length=32) }}"
+
+- name: save backup user details to vault
+  delegate_to: localhost
+  command: vault kv put kv/hosts/{{inventory_hostname}}/backup_user username={{backup_user|default('backup')}} password={{password}} description="Backup user on {{inventory_hostname}}"
+  environment:
+    VAULT_ADDR: "{{ vault_addr }}"
+    VAULT_SKIP_VERIFY: "1"
+    VAULT_TOKEN: "{{ lookup('env', vault_token_env_var) }}"  # usually $VAULT_TOKEN
+  become: no
+
+- name: setup low priv backup user for saving backups to storage
+  block:
+    - group: name={{backup_group|default('backup')}} state=present
+    - user:
+        name:     "{{backup_user|default('backup')}}"
+        home:     "{{ backup_dir }}"
+        group:    "{{ backup_group|default('backup')}}" 
+        password: "{{ password | password_hash('sha512') }}"
+        shell:    /bin/bash
+        state:    present
+        createhome: yes
+      register: backup_server_user
+
+    - file: path="{{ backup_dir }}/repo/{{ item }}" owner="{{ backup_user |default('backup') }}" group="{{ backup_group|default('backup') }}" mode=0700 state=directory
+      with_items: 
+        - "{{ backup_hosts }}"
+ 
+    - file:
+        state: directory
+        path:  "{{backup_server_user.home}}/.ssh"
+        owner: "{{backup_server_user.name}}"
+        mode:  "0700"
+      become: yes
+
+    - file:
+        state: touch
+        path:  "{{backup_server_user.home}}/.ssh/authorized_keys"
+        owner: "{{backup_server_user.name}}"
+        mode:  "0644"
+      become: yes
+
+- name: ensure ssh logins restrict the client to only its repo
+  include_tasks: "do-server-client-install.yml"
+  with_items:
+    - "{{ backup_hosts }}"
