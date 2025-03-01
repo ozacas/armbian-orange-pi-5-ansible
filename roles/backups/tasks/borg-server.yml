@@ -1,0 +1,40 @@
+---
+
+- name: ensure software is installed
+  apt: name=borgbackup state=present
+
+- name: create strong password for low-priv borgbackup user on backup server
+  set_fact:
+    password: "{{ lookup('password', '/dev/null', chars=['ascii', 'digits'], length=32) }}"
+
+- name: save backup user details to vault
+  delegate_to: localhost
+  command: vault kv put kv/hosts/{{inventory_hostname}}/backup_user username=backups password={{password}} description="Backup user on {{inventory_hostname}}"
+  environment:
+    VAULT_ADDR: "{{ vault_addr |default('https://vault.lan:8200') }}"
+    VAULT_SKIP_VERIFY: "1"
+    VAULT_TOKEN: "{{ vault_token }}"
+  become: no
+
+- name: setup low priv backup user for saving backups to storage
+  user:
+    name: backups
+    state: present
+    shell: /bin/bash
+    password: "{{ password | password_hash('sha512') }}"
+    create_group: yes
+    append: yes
+
+- stat: path={{backup_dir}}
+  register: backup_dir_exists
+
+- fail: msg="Backup directory {{backup_dir}} does not exist!"
+  when:
+    - not backup_dir_exists.stat.exists
+
+- name: initialise repo in the designated location
+  block:
+    - include_tasks: "init-repo-for-backup-host.yml"
+      with_items:
+        - "{{ backup_hosts }}"
+

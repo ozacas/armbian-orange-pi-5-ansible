@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sun Feb 23 09:45:42 2025 AEST by acas
+#  Generated Sat Mar  1 09:31:31 2025 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -291,13 +291,7 @@ load_modules() {
 
 verify_interfaces() {
     :
-    echo "Verifying interfaces: enP4p1s0 lo"
-    for i in enP4p1s0 lo ; do
-        $IP link show "$i" > /dev/null 2>&1 || {
-            log "Interface $i does not exist"
-            exit 1
-        }
-    done
+    
 }
 
 prolog_commands() {
@@ -318,11 +312,11 @@ run_epilog_and_exit() {
 configure_interfaces() {
     :
     # Configure interfaces
-    update_addresses_of_interface "lo 127.0.0.1/8" ""
-    getaddr enP4p1s0  i_enP4p1s0
-    getaddr6 enP4p1s0  i_enP4p1s0_v6
-    getnet enP4p1s0  i_enP4p1s0_network
-    getnet6 enP4p1s0  i_enP4p1s0_v6_network
+
+    getaddr enP4p65s0  i_enP4p65s0
+    getaddr6 enP4p65s0  i_enP4p65s0_v6
+    getnet enP4p65s0  i_enP4p65s0_network
+    getnet6 enP4p65s0  i_enP4p65s0_v6_network
 }
 
 script_body() {
@@ -360,19 +354,19 @@ script_body() {
 
     # ================ Table 'filter', rule set Policy
     # 
-    # Rule 0 (enP4p1s0)
+    # Rule 0 (enP4p65s0)
     # 
-    echo "Rule 0 (enP4p1s0)"
+    echo "Rule 0 (enP4p65s0)"
     # 
     # anti-spoofing rule for packets that claim to originate from opi2 but are inbound on the interface (note dynamic addressing in use) meaning they actually came from somewhere else and thus have been "spoofed" as trust worthy
     $IPTABLES -N In_RULE_0
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A FORWARD -i enP4p1s0   -s $i_enP4p1s0   -j In_RULE_0 
+    test -n "$i_enP4p65s0" && $IPTABLES -A FORWARD -i enP4p65s0   -s $i_enP4p65s0   -j In_RULE_0 
     done
     $IPTABLES -A In_RULE_0  -j LOG  --log-level info --log-prefix "RULE 0 -- DENY "
     $IPTABLES -A In_RULE_0  -j DROP
@@ -424,9 +418,9 @@ script_body() {
     # 
     echo "Rule 5 (global)"
     # 
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A INPUT -p tcp -m tcp  -s $i_enP4p1s0   --dport 1514:1515  -m state --state NEW  -j ACCEPT 
+    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -p tcp -m tcp  -s $i_enP4p65s0   --dport 1514:1515  -m state --state NEW  -j ACCEPT 
     done
     $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j ACCEPT
     # 
@@ -444,9 +438,9 @@ script_body() {
     echo "Rule 7 (global)"
     # 
     $IPTABLES -N RULE_7
-    for i_enP4p1s0 in $i_enP4p1s0_list
+    for i_enP4p65s0 in $i_enP4p65s0_list
     do
-    test -n "$i_enP4p1s0" && $IPTABLES -A OUTPUT  -d $i_enP4p1s0   -j RULE_7 
+    test -n "$i_enP4p65s0" && $IPTABLES -A OUTPUT  -d $i_enP4p65s0   -j RULE_7 
     done
     $IPTABLES -A INPUT  -j RULE_7
     $IPTABLES -A RULE_7  -j LOG  --log-level info --log-prefix "RULE 7 -- DENY "
@@ -507,7 +501,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sun Feb 23 09:45:42 2025 by acas"
+        log "Activating firewall script generated Sat Mar  1 09:31:31 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

@@ -41,3 +41,11 @@
   when:
     - fw_script is changed or firewall is changed
 
+- name: verify that the service didnt fail... before proceeding
+  block:
+    - command: systemctl status firewall.service
+      register: fw_status
+    - fail: msg="Firewall startup failed for {{inventory_hostname}} - {{fw_status}}"
+      when:
+        - "'failed' in fw_status.stdout|lower"
+

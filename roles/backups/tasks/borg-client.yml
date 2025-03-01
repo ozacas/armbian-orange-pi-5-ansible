@@ -1,0 +1,24 @@
+---
+
+- name: install borg backup
+  apt: name=borgbackup state=present
+
+- name: install backup script template with folders and opts set via ansible
+  template:
+    src: templates/backup.sh.j2
+    dest: /usr/local/sbin/borgbackup.sh
+    force: yes
+    backup: yes
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: install cron job to run scheduled backup
+  cron:
+    name:   borgbackup
+    state:  present
+    user:   root
+    minute: "{{ backup_minute |default(34 |random(seed=inventory_hostname)) }}"
+    hour:   "{{ backup_hour   |default(17 |random(seed=inventory_hostname)) }}"
+    dow:    "{{ backup_dow    |default(6) }}"
+    job:    "/usr/local/sbin/borgbackup.sh | logger -t borgbackup"

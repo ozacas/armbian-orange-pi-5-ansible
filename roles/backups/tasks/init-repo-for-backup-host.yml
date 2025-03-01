@@ -1,0 +1,31 @@
+---
+
+- stat: path={{backup_dir}}
+  register: backup_dir_exists
+
+- fail: msg="Backup directory {{backup_dir}} does not exist!"
+  when:
+    - not backup_dir_exists.stat.exists
+
+- name: create backup directory for {{item}}
+  command: mkdir -p {{backup_dir}}/{{item}}
+  ignore_errors: yes
+  with_items:
+    - "{{ backup_hosts }}"
+
+- name: set encryption key for {{item}}
+  set_fact:
+    encryption_key: "{{ lookup('password', '/dev/null', chars=['ascii', 'digits'], length=64) }}"
+    passphrase: "{{ lookup('password', '/dev/null', chars=['ascii', 'digits'], length=32) }}" 
+
+- name: setup repo for {{item}}
+  command: borg init --encryption={{encryption_key}} {{backup_server_dir}}/{{item}}/
+
+- name: save host backup details to vault for {{item}}
+  delegate_to: localhost
+  command: vault kv put kv/hosts/{{item}}/backups/encryption_key key={{encryption_key}} passphrase={{passphrase}} server_dir={{backup_server_dir}} backup_host={{item}} description="Backup repo encryption key on backup server and repo location for borg backups"
+  environment:
+    VAULT_ADDR: "{{ vault_addr |default('https://vault.lan:8200') }}"
+    VAULT_SKIP_VERIFY: "1"
+    VAULT_TOKEN: "{{ vault_token }}"
+  become: no
