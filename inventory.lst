@@ -34,7 +34,7 @@ backup_server=rock-5b-plus
 backup_hosts='["edge.lan", "opi.lan", "opi2.lan", "hplappie.lan", "t6.lan"]'
 # /repo/HOSTNAME/ will be appended to it by each client to secure each host
 backup_repo="ssh://backup@rock-5b-plus.lan"  
-backup_folders='["/home/acas"]'
+backup_folders=["/home/acas"]
 scheduled_backup=no # manual runs only
 # to get repo creds securely and manage ssh keys, must be setup and working BEFORE backup setup
 vault_token_env_var="VAULT_TOKEN" 
