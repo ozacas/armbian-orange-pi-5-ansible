@@ -61,3 +61,4 @@
   include_tasks: "do-server-client-install.yml"
   with_items:
     - "{{ backup_hosts }}"
+    - "{{ hostvars[backup_server]['hostname'] }}"  # server role is also a client for completeness sake

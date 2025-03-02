@@ -22,7 +22,7 @@
 - name: ensure server-side config exists for the specified client
   block:
     - stat: path={{backup_dir}}
-      delegate_to: rock-5b-plus
+      delegate_to: "{{backup_server}}"
       register: backup_dir_exists
 
     - fail: msg="Backup directory {{backup_dir}} does not exist!"
@@ -39,12 +39,14 @@
         passphrase:     "{{ lookup('password', '/dev/null', chars=['ascii_letters', 'digits'], length=32) }}" 
 
     - name: "setup repo for {{item}}"
-      delegate_to: rock-5b-plus
+      delegate_to: "{{backup_server}}"
       command: borg init --encryption=keyfile {{backup_dir}}/repo/{{item}}
       args:
         creates: "{{backup_dir}}/repo/{{item}}/config"  # IDEMPOTENCE: skip init if this file already exists... ie. already init'ed 
       environment:
         BORG_PASSPHRASE: "{{ passphrase }}"
+      become: yes
+      become_user: "{{ backup_user |default('backup') }}"
       register: init_results
 
     - name: save host backup details to vault for {{item}}

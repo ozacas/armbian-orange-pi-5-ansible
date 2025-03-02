@@ -1,12 +1,13 @@
 #!/bin/sh
 
 set -x
-for folder in {{ backup_folders }}
+for folder in {{ ' '.join(backup_folders) }}
 do 
   now=`date`
   echo "Backing up $folder to {{backup_repo}} as at $now"
+  repo_name=$(echo $folder | perl -ne 's#/#_#g; print')
   # carefully chosen server path to correspond to permitted folder on server 
-  borg create {{backup_repo}}/repo/$(hostname)/ "$folder"
+  borg create {{backup_repo}}/backups/repo/$(hostname)/::${repo_name} "$folder"
 done
 
 exit 0

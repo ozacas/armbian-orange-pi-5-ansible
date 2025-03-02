@@ -17,6 +17,8 @@
 - name: setup backup user on target host
   include_tasks: "init-client-ssh-keys.yml"
 
+- name: ensure group backup can access /usr/local/sbin
+  file: path=/usr/local/sbin state=directory owner=root group=backup mode="0750" 
 - name: install backup script template with folders and opts set via ansible
   template:
     src: templates/backup.sh.j2
@@ -24,7 +26,7 @@
     force: yes
     backup: yes
     owner: root
-    group: root
+    group: backup
     mode: "0750"
 
 - name: install cron job to run scheduled backup when scheduled
