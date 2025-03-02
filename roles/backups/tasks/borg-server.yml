@@ -19,7 +19,7 @@
 
 - name: save backup user details to vault
   delegate_to: localhost
-  command: vault kv put kv/hosts/{{inventory_hostname}}/backup_user username={{backup_user|default('backup')}} password={{password}} description="Backup user on {{inventory_hostname}}"
+  command: vault kv put kv/hosts/{{hostname}}/backup_user username={{backup_user|default('backup')}} password={{password}} description="Backup user on {{hostname}}"
   environment:
     VAULT_ADDR: "{{ vault_addr }}"
     VAULT_SKIP_VERIFY: "1"

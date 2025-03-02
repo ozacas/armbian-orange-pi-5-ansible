@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -x
+for folder in {{ backup_folders }}
+do 
+  now=`date`
+  echo "Backing up $folder to {{backup_repo}} as at $now"
+  # carefully chosen server path to correspond to permitted folder on server 
+  borg create {{backup_repo}}/repo/$(hostname)/ "$folder"
+done
+
+exit 0

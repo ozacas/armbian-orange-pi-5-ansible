@@ -1,0 +1,24 @@
+---
+
+- name: run backup one-client-at-a-time to avoid overloading backup server
+  hosts: backups
+  serial: 1
+  block:
+    - name: obtain passphrase from vault for {{hostname}} 
+      delegate_to: localhost
+      command: vault kv get -format=json -field=data kv/hosts/{{hostname}}/backups/encryption_key
+      environment:
+        VAULT_SKIP_VERIFY: "1"
+        VAULT_ADDR: "{{ vault_addr }}"
+        VAULT_TOKEN: "{{ lookup('env', vault_token_env_var) }}" 
+      become: no
+      register: backup_key_str
+    - name: set json fact
+      set_fact:
+        backup_key: "{{ backup_key_str.stdout |from_json }}"
+    - name: run backup on target host ssh'ing into backup server to store data
+      shell: /usr/local/sbin/backup.sh | logger -t backup
+      become: yes
+      become_user: "{{ backup_user |default('backup') }}"
+      register: debug_backup
+    - debug: var=debug_backup

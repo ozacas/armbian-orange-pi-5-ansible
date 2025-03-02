@@ -20,7 +20,7 @@
 - name: install backup script template with folders and opts set via ansible
   template:
     src: templates/backup.sh.j2
-    dest: /usr/local/sbin/borgbackup.sh
+    dest: /usr/local/sbin/backup.sh
     force: yes
     backup: yes
     owner: root
@@ -29,7 +29,7 @@
 
 - name: install cron job to run scheduled backup when scheduled
   cron:
-    name:   borgbackup
+    name:   backup
     state:  present
     user:   root
     minute: "{{ backup_minute |default(34 |random(seed=inventory_hostname)) }}"

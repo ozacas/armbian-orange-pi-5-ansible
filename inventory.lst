@@ -12,26 +12,32 @@ n2 ansible_host=192.168.2.174 hostname=n2.lan firewall_script=templates/firewall
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes apt_purge='["firefox"]'
 
 # rock5b+ running 24.04 vendor kernel (6.1.x)
-rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh docker=yes disable_leds=yes backup_server=yes backup_dir=/backups/borg/ 
+rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh docker=yes disable_leds=yes backup_dir=/backups/borg/ 
 
 # khadas edge2 running vendor kernel (6.1.x) - forcibly nuke old multimedia hardware accel shared libs and replace them with new (uefi)
 edge ansible_host=192.168.2.242 hostname=edge.lan docker=yes firewall_script=templates/firewalls/edge2.sh 
 
+# **clients** to backup
 [backups]
-rock-5b-plus backup_server=yes backup_dir=/backups/borg 
-edge 
+rock-5b-plus backup_dir=/backups/borg 
+#edge 
 opi 
 opi2 
-hplappie 
+#hplappie 
 t6 
 
 [backups:vars]
-backup=yes          # software and backup script installed on host in /usr/local/sbin/backup.sh for root to use
+# software and backup script installed on host in /usr/local/sbin/backup.sh for root to use
+backup=yes
+# INVENTORY name for the backup server
+backup_server=rock-5b-plus
 backup_hosts='["edge.lan", "opi.lan", "opi2.lan", "hplappie.lan", "t6.lan"]'
-backup_repo="backup@rock-5b-plus.lan"
+# /repo/HOSTNAME/ will be appended to it by each client to secure each host
+backup_repo="ssh://backup@rock-5b-plus.lan"  
 backup_folders='["/home/acas"]'
 scheduled_backup=no # manual runs only
-vault_token_env_var="VAULT_TOKEN" # to get repo creds securely and manage ssh keys, must be setup prior to backup setup
+# to get repo creds securely and manage ssh keys, must be setup and working BEFORE backup setup
+vault_token_env_var="VAULT_TOKEN" 
 vault_addr="https://vault.lan:8200"
 
 [multimedia]
