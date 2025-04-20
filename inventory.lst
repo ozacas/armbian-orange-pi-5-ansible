@@ -9,7 +9,7 @@ opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewa
 n2 ansible_host=192.168.2.174 hostname=n2.lan firewall_script=templates/firewalls/n2.sh docker=no cpu_governor=ondemand harden=yes 
 
 # orange pi 5+ running ubuntu 24.04 edge kernel (6.12, uefi) 
-opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes apt_purge='["firefox"]'
+opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh huginn=yes #nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes apt_purge='["firefox"]'
 
 # rock5b+ running 24.04 vendor kernel (6.1.x)
 rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh docker=yes disable_leds=yes backup_dir=/backups/borg/ 

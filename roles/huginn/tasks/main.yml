@@ -1,0 +1,63 @@
+---
+
+- name: require docker operational
+  systemd: name=docker.service enabled=yes state=started masked=no
+  become: yes
+  register: current
+
+- fail: msg="Huginn install requires docker service to be operational"
+  when:
+    - not (current.status.ActiveState == "active" or current.status.SubState == "running")
+
+- name: set creds and install in vault for the host
+  set_fact:
+    huginn_user: admin
+    huginn_pass: "{{ lookup('password', '/dev/null',  chars=['ascii_lowercase', 'digits'], length=25) }}"
+    huginn_image: "ozacas/huginn:arm64"
+    pg_user: hadmin 
+    pg_pass: "{{ lookup('password', '/dev/null', chars=['ascii_lowercase', 'digits'], length=25)  }}"
+    pg_image: "postgres:15"
+    secret_token: "{{ lookup('password', '/dev/null', chars=['hexdigits'], length=132) |lower }}"
+
+- name: clone latest code onto target host to build aarch64 version
+  block: 
+    - name: git clone huginn repo
+      command: git clone https://github.com/huginn/huginn.git
+      args:
+        creates: huginn/README.md  # if this already exists, dont clone again on target host
+        chdir:   /tmp
+# single process is easier to port to arm64 so we use it for now...
+    - name: build arch specific container on target using docker build cache when possible
+      command: docker build --rm=true --tag={{huginn_image}} -f docker/single-process/Dockerfile .
+      args:
+        chdir: /tmp/huginn
+
+- name: save to vault if vault_fqdn set using current VAULT_ADDR and VAULT_TOKEN
+  delegate_to: localhost
+  command: vault put kv/hosts/{{inventory_hostname}}/huginn huginn_user={{huginn_user}} huginn_password={{huginn_pass}} pg_user={{pg_user}} pg_password={{pg_pass}} huginn_image={{huginn_image}} pg_image={{pg_image}} secret_token={{secret_token}}
+  when:
+    - vault_fqdn is defined 
+    - "{{ lookup('env', 'VAULT_ADDR') > 0 }}"
+
+- name: ensure yaml folder exits on target host
+  file: state=directory path="huginn"
+  become: no
+ 
+- name: install compose template and env files into ansible user - not root
+  template:
+    src:  "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: "{{ item.mode |default('0640') }}"
+    force: yes
+    backup: yes
+  become: no
+  with_items:
+    - { "src": "templates/secrets.env", "dest": "huginn/secrets.env", "mode": "0400" }
+    - { "src": "templates/pg.env", "dest": "huginn/pg.env", "mode": "0400" }
+    - { "src": "templates/docker-compose.yml", "dest": "huginn/docker-compose.yml" }
+
+- name: bring stack up with chosen config
+  command: docker compose up -d 
+  args:
+    chdir: huginn
+  become: yes

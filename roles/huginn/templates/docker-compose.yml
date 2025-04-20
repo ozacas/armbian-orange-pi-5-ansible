@@ -1,0 +1,40 @@
+---
+
+volumes:
+  pgdata: {}
+
+services:
+  postgres:
+    image: {{pg_image}}
+    restart: always
+    env_file:
+      - pg.env
+    volumes:
+      - pgdata:/var/lib/postgresql
+
+  web:
+    image: {{huginn_image}} 
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      # - DATABASE_INITIAL_CONNECT_MAX_RETRIES=5
+      - INTENTIONALLY_SLEEP=10
+    env_file:
+      - pg.env
+      - secrets.env
+    links:
+      - postgres
+    depends_on:
+      - postgres
+ 
+  threaded:
+    image: {{huginn_image}}
+    command: /scripts/init bin/threaded.rb
+    restart: always
+    env_file:
+      - pg.env
+      - secrets.env
+    depends_on:
+      - postgres
+      - web

@@ -61,6 +61,10 @@
     - role: backups
       when: 
         - "backup_server is defined or backup is defined"
+    - role: huginn
+      when:
+        -  huginn|default(False)|bool
+
 
 # on desktop hosts provision what was requested.. 
 #- hosts: desktops
