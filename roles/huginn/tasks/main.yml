@@ -37,7 +37,7 @@
   command: vault put kv/hosts/{{inventory_hostname}}/huginn huginn_user={{huginn_user}} huginn_password={{huginn_pass}} pg_user={{pg_user}} pg_password={{pg_pass}} huginn_image={{huginn_image}} pg_image={{pg_image}} secret_token={{secret_token}}
   when:
     - vault_fqdn is defined 
-    - "{{ lookup('env', 'VAULT_ADDR') > 0 }}"
+    - "{{ lookup('env', 'VAULT_ADDR') |length > 0 }}"
 
 - name: ensure yaml folder exits on target host
   file: state=directory path="huginn"
@@ -55,9 +55,20 @@
     - { "src": "templates/secrets.env", "dest": "huginn/secrets.env", "mode": "0400" }
     - { "src": "templates/pg.env", "dest": "huginn/pg.env", "mode": "0400" }
     - { "src": "templates/docker-compose.yml", "dest": "huginn/docker-compose.yml" }
+  register: new_install
 
-- name: bring stack up with chosen config
+- name: DESTROY existing huginn stack incl. data iff changed so that no port conflict and fresh start
+  command: docker compose down -v
+  args:
+    chdir: huginn
+  when:
+    - new_install is changed
+ 
+- name: bring stack up with chosen config iff changed
   command: docker compose up -d 
   args:
     chdir: huginn
   become: yes
+  when:
+    - new_install is success 
+

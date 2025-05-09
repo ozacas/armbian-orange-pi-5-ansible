@@ -92,26 +92,33 @@
     - libgl1
     - libgl1-mesa-dev
     - libgl1-mesa-dri
+#    - libgl1-mesa-glx # see https://askubuntu.com/questions/1517352/issues-installing-libgl1-mesa-glx
     - libglvnd0
     - libglx0
     - libglx-mesa0
     - libglapi-mesa
+    - libosmesa6
     - librga2 
     - librockchip-mpp1 
     - librockchip-vpu0 
+    - mesa-drm-shim
+    - mesa-libgallium
+    - mesa-opencl-icd
     - mesa-utils  # needed for eglinfo below
+    - mesa-utils-bin
     - mesa-utils-extra
+    - mesa-vdpau-drivers  # mostly useful to those with external GPUs...
+    - mesa-va-drivers 
+    - mesa-vulkan-drivers
     - glmark2
     - "{{ jammy_packages|default([]) }}"
     - "{{ noble_packages|default([]) }}"
     - glmark2-wayland
     - glmark2-es2-wayland 
     - glmark2-es2
+#    - glx-alternative-mesa  # does not seem to exist under ubuntu 24.04 on nanopc t6
     - rockchip-multimedia-config
     - rockchip-mpp-demos
-    - mesa-vdpau-drivers  # mostly useful to those with external GPUs...
-    - mesa-va-drivers 
-    - mesa-vulkan-drivers
 
 - name: fail deployment iff armbian firmware package not installed
   block:

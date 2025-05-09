@@ -16,7 +16,7 @@ services:
     image: {{huginn_image}} 
     restart: always
     ports:
-      - "3000:3000"
+      - "3333:3000"
     environment:
       # - DATABASE_INITIAL_CONNECT_MAX_RETRIES=5
       - INTENTIONALLY_SLEEP=10

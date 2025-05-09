@@ -1,6 +1,6 @@
 [all]
 # nanopc t6 running ubuntu 24.04 vendor kernel
-t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' multimedia=no docker=no 
+t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' docker=no 
 
 # orange pi 5+ running ubuntu 24.04 edge kernel (6.13, uefi, efi stub, devicetree)
 opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  # docker=yes 
@@ -12,19 +12,19 @@ n2 ansible_host=192.168.2.174 hostname=n2.lan firewall_script=templates/firewall
 opi2 ansible_host=192.168.2.173 hostname=opi2.lan firewall_script=templates/firewalls/opi2.sh huginn=yes #nfs_exports='[{"path": "/export/edge-data", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path": "/export", "cidr": "192.168.2.0/24"}]' docker=yes apt_purge='["firefox"]'
 
 # rock5b+ running 24.04 vendor kernel (6.1.x)
-rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh docker=yes disable_leds=yes backup_dir=/backups/borg/ 
+rock-5b-plus ansible_host=192.168.2.149 hostname=rock-5b-plus.lan firewall_script=templates/firewalls/rock-5b-plus.sh docker=yes disable_leds=yes 
 
 # khadas edge2 running vendor kernel (6.1.x) - forcibly nuke old multimedia hardware accel shared libs and replace them with new (uefi)
 edge ansible_host=192.168.2.242 hostname=edge.lan docker=yes firewall_script=templates/firewalls/edge2.sh 
 
 # **clients** to backup
-[backups]
-rock-5b-plus backup_dir=/backups/borg 
+#[backups]
+#rock-5b-plus backup_dir=/backups/borg 
 #edge 
-opi 
-opi2 
+#opi 
+#opi2 
 #hplappie 
-t6 
+#t6 
 
 [backups:vars]
 # software and backup script installed on host in /usr/local/sbin/backup.sh for root to use
@@ -41,9 +41,13 @@ vault_token_env_var="VAULT_TOKEN"
 vault_addr="https://vault.lan:8200"
 
 [multimedia]
+t6 multimedia=yes force=yes
 edge multimedia=yes
 # DISABLED now that it is provisioned
-#rock-5b-plus ai=yes multimedia=yes force=yes ai_group=acas ai_user=acas mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g13p0-wayland-gbm_1.9-1_arm64.deb'
+#rock-5b-plus ai=yes multimedia=yes ai_group=acas ai_user=acas 
+
+[multimedia:vars]
+mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-2131373/libmali-valhall-g610-g13p0-wayland-gbm_1.9-1_arm64.deb'
 
 [nfs]
 rock-5b-plus nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' ansible_become=yes nfs_exports='[{"path": "/export/backup", "cidr": "192.168.2.0/24", "opts": "rw,sync,no_subtree_check", "owner": "acas", "group": "acas"}, {"path":"/export", "cidr": "192.168.2.0/24"}, {"path": "/var/lib/tvheadend/recordings", "cidr": "192.168.2.0/24", "opts": "ro,async,no_subtree_check", "owner": "hts", "group": "hts"}]' 
@@ -114,10 +118,6 @@ apt_install_recommends=no
 apt_disable_esm=yes
 apt={"mirror": "http://au.sbcmirror.org/armbian/apt", "distro_name": "noble"}
 apt_proxy={"http": "http://192.168.2.1:3128", "https": "http://192.168.2.1:3128"}
-
-# multimedia download url for mali rockchip release
-#mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g24p0-wayland-gbm_1.9-1_arm64.deb'
-mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g6p0-wayland-gbm_1.9-1_arm64.deb'
 
 # specify CPU governor to use (ondemand, schedutil, powersave, conservative, performance) for all hosts in inventory - comment out to disable
 cpu_governor=ondemand

@@ -1,0 +1,105 @@
+---
+
+# ref: https://blog.mlc.ai/2024/04/20/GPU-Accelerated-LLM-on-Orange-Pi
+# assumes opencl/clinfo is already working before we get here...
+
+- name: ensure git large file support is present
+  apt: name={{item}} state=present
+  become: yes
+  with_items:
+    - "git-lfs"
+    - "cmake"
+    - "python3-cython"
+
+- set_fact:
+    mlc_llm_dir: "{{ ai_home }}/mlc-llm"
+
+- name: ensure clean slate for git to clone into
+  file: path="{{mlc_llm_dir}}" state=absent
+  when:
+    - force |default(False) |bool
+
+- name: clone mlc-llm on target host ai user if not already present 
+  command: git clone --recursive https://github.com/mlc-ai/mlc-llm.git 
+  args:
+    chdir:   "{{ ai_home }}"
+    creates: "{{ mlc_llm_dir }}/README.md"
+  become: yes
+  become_user: "{{ ai_user }}"
+
+- set_fact:
+    prebuilt_dir: "{{ mlc_llm_dir }}/dist/prebuilt"
+    build_dir: "{{ mlc_llm_dir }}/build"
+    tvm_dir: "{{ ai_home }}/tvm_unity"
+    
+- name: ensure key folders are setup
+  file: state=directory recurse=yes path={{item}}
+  with_items:
+    - "{{ prebuilt_dir }}"
+    - "{{ build_dir }}"
+  become: yes
+  become_user: "{{ ai_user }}"
+
+- name: fetch key prebuilt datasets for testing
+  command: git clone {{item.cloneflags |default('') }} {{item.repo}} {{item.dest}}
+  args:
+    chdir: "{{ prebuilt_dir }}"
+    creates: "{{ item.creates }}"  # dont re-run clone if clone already exists to avoid network traffic
+  with_items:
+    - { "repo": "https://github.com/mlc-ai/binary-mlc-llm-libs.git", "dest": "lib", "creates": "{{prebuilt_dir}}/lib/README.md" }
+    - { "repo": "https://huggingface.co/mlc-ai/Llama-3-8B-Instruct-q4f16_1-MLC", "dest": "Llama-3-8B-Instruct-q4f16_1-MLC", "creates": "{{prebuilt_dir}}/Llama-3-8B-Instruct-q4f16_1-MLC/README.md" }
+    - { "repo": "https://github.com/mlc-ai/relax.git", "dest": "{{tvm_dir}}", creates: "{{tvm_dir}}/README.md", "cloneflags": "--recursive" }
+  become: yes
+  become_user: "{{ai_user}}"
+
+- name: build chat CLI
+  block:
+    - command: python3 ../cmake/gen_cmake_config.py
+      args: 
+        chdir: "{{ build_dir }}"
+        stdin: "{{tvm_dir}}\nn\nn\nn\nn\ny\ny\n\n"
+#$ python3 ../cmake/gen_cmake_config.py 
+#Enter TVM_SOURCE_DIR in absolute path. If not specified, 3rdparty/tvm will be used by default: /home/acas/tvm_unity
+#Use CUDA? (y/n): n
+#Use ROCm? (y/n): n
+#Use Vulkan? (y/n): n
+#Use Metal (Apple M1/M2 GPU) ? (y/n): n
+#Use OpenCL? (y/n) y
+#Use OpenCLHostPtr? (y/n): y
+
+    - shell: cmake .. && cmake --build . --parallel {{ansible_processor_cores}}
+      args:
+        chdir: "{{ build_dir }}"
+      register: mlc_llm_build
+
+- name: build TVM
+  block:
+    - file: state=directory path="{{ tvm_dir }}/build" 
+      become: yes
+      become_user: "{{ ai_user }}"
+    - copy: remote_src=yes src="{{tvm_dir}}/cmake/config.cmake" dest="{{tvm_dir}}/build"
+      become: yes
+      become_user: "{{ ai_user }}"
+    - shell: cmake .. && cmake --build . --target runtime --parallel {{ansible_processor_cores}}
+      args:
+        chdir: "{{ tvm_dir }}/build"
+      become: yes
+      become_user: "{{ ai_user }}"
+
+- name: run python test script
+  block:
+    - template: 
+        src: templates/mlc-llm-pytest.py
+        dest: "{{mlc_llm_dir}}/llm-test.py"
+        owner: "{{ ai_user }}"
+      become: yes
+      become_user: "{{ ai_user }}"
+    - command: python3 {{mlc_llm_dir}}/llm-test.py
+      environment:
+        TVM_HOME:     "{{ tvm_dir }}"
+        MLC_LLM_HOME: "{{ mlc_llm_dir }}/"
+        PYTHONPATH:   "{{ tvm_dir }}/python:{{ mlc_llm_dir }}/python"
+      become: yes
+      become_user: "{{ ai_user }}"
+      register: test_results
+    - debug: var=test_results

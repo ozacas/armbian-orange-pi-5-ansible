@@ -40,6 +40,9 @@
 - name: install rknn-toolkit2
   include_tasks: "rknn2.yml"
 
+- name: install mlc-llm and related packages
+  include_tasks: "mlc-llm.yml"
+
 - name: install a custom fork to leverage rockchip capabilities
   include_tasks: "ezrknn-llm.yml"
 

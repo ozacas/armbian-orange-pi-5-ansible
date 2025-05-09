@@ -18,7 +18,7 @@
       VAULT_ADDR: "{{ vault_addr }}"
       VAULT_SKIP_VERIFY: "1"
       VAULT_TOKEN: "{{ lookup('env', vault_token_env_var) }}"  # usually $VAULT_TOKEN
-
+   
   - file: path={{item}} state=absent
     delegate_to: localhost
     with_items:
