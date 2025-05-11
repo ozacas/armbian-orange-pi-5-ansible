@@ -4,7 +4,7 @@
   ansible.builtin.user: name="{{ansible_ssh_user}}" append=yes groups=video update_password=on_create
 
 - name: fetch rkmppenc deb package from the author's github 
-  command: wget -O /tmp/rkmppenc.deb https://github.com/rigaya/rkmppenc/releases/download/0.10/rkmppenc_0.10_Ubuntu{{ansible_distribution_major_version}}.04_arm64.deb
+  command: wget -O /tmp/rkmppenc.deb https://github.com/rigaya/rkmppenc/releases/download/0.15/rkmppenc_0.15_Ubuntu{{ansible_distribution_major_version}}.04_arm64.deb
 
 - name: install rkmppenc
   command: dpkg -i /tmp/rkmppenc.deb

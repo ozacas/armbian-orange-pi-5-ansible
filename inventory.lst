@@ -41,7 +41,7 @@ vault_token_env_var="VAULT_TOKEN"
 vault_addr="https://vault.lan:8200"
 
 [multimedia]
-t6 multimedia=yes force=yes
+t6 multimedia=yes force=yes mali_url='https://github.com/tsukumijima/libmali-rockchip/releases/download/v1.9-1-3238416/libmali-valhall-g610-g6p0-wayland-gbm_1.9-1_arm64.deb'
 edge multimedia=yes
 # DISABLED now that it is provisioned
 #rock-5b-plus ai=yes multimedia=yes ai_group=acas ai_user=acas 
