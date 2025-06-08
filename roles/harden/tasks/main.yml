@@ -11,6 +11,9 @@
   when:
     - not harden|default(False)|bool or not is_ubuntu or ansible_distribution_major_version|int < 20 or ansible_distribution_major_version|int > 24
 
+- name: ensure auditd is installed since required with harden
+  apt: name=auditd state=present
+
 - name: ensure ufw is installed at least for now, subsequent code may remove. Harden assumes ufw
   apt: name=ufw state=latest
 

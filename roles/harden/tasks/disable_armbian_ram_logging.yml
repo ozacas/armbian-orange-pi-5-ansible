@@ -3,11 +3,15 @@
 # this must be disabled since a boot failure will result on the hardened systems
 - name: disable ZRAM swap and logging
   block:
-    - lineinfile: 
-        path: /etc/default/armbian-zram-config
-        line: ENABLED=false
+    - name: disable armbian ram services
+      lineinfile: 
+        path:    '{{item}}'
+        line:    ENABLED=false
         regexp: ^ENABLED
         state: present
+      with_items:
+        - /etc/default/armbian-zram-config
+        - /etc/default/armbian-ramlog
     - lineinfile:
         path: /etc/fstab
         line: "#/dev/zram mount disabled by ansible harden role"
@@ -17,7 +21,7 @@
     - systemd: name="{{item}}" state=stopped masked=yes enabled=no daemon_reload=yes
       with_items:
         - armbian-zram-config 
-        - armbian-ram-logging
+        - armbian-ramlog
       ignore_errors: yes # ok if service not present on target
     - systemd: daemon_reload=yes  # ensure systemd is aware of fstab changes
       when: 
