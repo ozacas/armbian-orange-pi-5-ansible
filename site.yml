@@ -6,6 +6,12 @@
   roles:
     - sbc-facts
 
+- name: ensure apt is working, cleaning up sources if we need to
+  hosts: all
+  become: yes
+  roles:
+    - ensure-working-apt
+
 - name: harden targets iff requested BEFORE system gets changed too much
   hosts: all
   become: yes

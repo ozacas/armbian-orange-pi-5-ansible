@@ -1,0 +1,11 @@
+---
+
+- name: check whether apt update is working on target host ie. no unresolved gpg keys
+  apt: update_cache=yes
+  become: yes
+  register: apt_results
+
+- name: run Igor procedure to fix armbian sources if not working
+  include_tasks: "tasks/run-igor-proc.yml"
+  when:
+    - apt_results is failed

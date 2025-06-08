@@ -1,0 +1,24 @@
+---
+
+# ref: https://forum.armbian.com/topic/23465-apt-get-update-fails-with-public-key-errors/page/2/
+
+- name: run Igor procedure
+  block:
+    - file: state=absent path="{{item}}"
+      become: yes
+      with_items:
+        - "/etc/apt/sources.list.d/armbian.sources"
+        - "/etc/apt/sources.list.d/armbian.list"
+    - shell: wget https://apt.armbian.com/armbian.key -O /tmp/key
+      become: yes
+    - shell: gpg --dearmor < /tmp/key | sudo tee /usr/share/keyrings/armbian.gpg > /dev/null
+      become: yes
+    - command: chmod go+r /usr/share/keyrings/armbian.gpg
+      become: yes
+    - shell: echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/armbian.gpg] http://apt.armbian.com $(lsb_release -cs) main  $(lsb_release -cs)-utils  $(lsb_release -cs)-desktop" | sudo tee /etc/apt/sources.list.d/armbian.list
+    - command: apt update
+      become: yes
+      register: apt_results
+    - fail: msg="apt update is broken - please fix manually..."
+      when: 
+        - apt_results is failed

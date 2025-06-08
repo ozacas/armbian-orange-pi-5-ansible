@@ -2,8 +2,8 @@
 # nanopc t6 running ubuntu 24.04 vendor kernel
 t6 ansible_host=192.168.2.193 hostname=t6.lan firewall_script=templates/firewalls/t6.sh nfs_mounts='[{"mount": "/nfs", "svr_path": "192.168.2.173:/edge-data", "fstype": "nfs4" }]' docker=no 
 
-# orange pi 5+ running ubuntu 24.04 edge kernel (6.13, uefi, efi stub, devicetree)
-opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  # docker=yes 
+# orange pi 5+ running ubuntu 24.04 edge kernel (6.15, uefi, efi stub, devicetree)
+opi ansible_host=192.168.2.146 hostname=opi.lan firewall_script=templates/firewalls/opi.sh  cpu_governor=ondemand docker=yes 
 
 # odroid n2 (only 2gb ram)
 n2 ansible_host=192.168.2.174 hostname=n2.lan firewall_script=templates/firewalls/n2.sh docker=no cpu_governor=ondemand harden=yes 
@@ -62,8 +62,8 @@ edge
 #[kodi]
 #t6 kodi_flatpak=yes
 
-#[wazuh_manager]
-#opi
+[wazuh_manager]
+opi
 
 # hashicorp vault nodes - must be at least 3 for a RAFT cluster
 # NOW DISABLED SINCE WILL DESTROY EXISTING VAULT
