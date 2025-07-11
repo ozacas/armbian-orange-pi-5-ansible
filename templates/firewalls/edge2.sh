@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sun Jan 12 10:34:25 2025 AEST by acas
+#  Generated Sat Jul 12 07:17:09 2025 AEST by acas
 #
 # files: * edge2.fw /etc/fw/edge2.fw
 #
@@ -411,9 +411,9 @@ script_body() {
     # 
     echo "Rule 4 (global)"
     # 
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.173   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.173   --dports 8096,8883,2049  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.173   --dport 2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.136   --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.136   --dports 8096,8883,2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.136   --dport 2049  -m state --state NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
@@ -503,7 +503,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sun Jan 12 10:34:25 2025 by acas"
+        log "Activating firewall script generated Sat Jul 12 07:17:09 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
