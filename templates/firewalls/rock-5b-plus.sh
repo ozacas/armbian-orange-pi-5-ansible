@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Mar  1 11:49:42 2025 AEST by acas
+#  Generated Sat Jul 26 16:20:58 2025 AEST by acas
 #
 # files: * rock-5b-plus.fw /etc/fw/rock-5b-plus.fw
 #
@@ -425,12 +425,15 @@ script_body() {
     echo "Rule 3 (global)"
     # 
     # permit connectivity from t6 to key internal LAN services
+    $IPTABLES -A OUTPUT -p tcp -m tcp  --sport 9092:9202  --dport 9092:9093  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,8096,8883,2049,8080,22  -m state --state NEW  -j ACCEPT
     $IPTABLES -A OUTPUT -p udp -m udp  --dport 2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  --sport 9092:9202  --dport 9092:9093  -m state --state NEW  -j ACCEPT
     $IPTABLES -A INPUT -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j ACCEPT
     $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,8096,8883,2049,8080,22  -m state --state NEW  -j ACCEPT
     $IPTABLES -A INPUT -p udp -m udp  --dport 2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  --sport 9092:9202  --dport 9092:9093  -m state --state NEW  -j ACCEPT
     $IPTABLES -A FORWARD -p tcp -m tcp  --dport 9981:9982  -m state --state NEW  -j ACCEPT
     $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,8096,8883,2049,8080,22  -m state --state NEW  -j ACCEPT
     $IPTABLES -A FORWARD -p udp -m udp  --dport 2049  -m state --state NEW  -j ACCEPT
@@ -548,7 +551,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Mar  1 11:49:42 2025 by acas"
+        log "Activating firewall script generated Sat Jul 26 16:20:58 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
