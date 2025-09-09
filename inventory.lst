@@ -116,7 +116,7 @@ dns_cache=yes
 # apt setup for [all] target hosts (will also obey ipv4/ipv6 settings)
 apt_install_recommends=no
 apt_disable_esm=yes
-apt={"mirror": "http://au.sbcmirror.org/armbian/apt", "distro_name": "noble"}
+apt={"mirror": "http://apt.armbian.com", "distro_name": "noble"}
 apt_proxy={"http": "http://192.168.2.1:3128", "https": "http://192.168.2.1:3128"}
 
 # specify CPU governor to use (ondemand, schedutil, powersave, conservative, performance) for all hosts in inventory - comment out to disable
