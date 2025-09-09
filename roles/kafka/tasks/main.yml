@@ -1,0 +1,30 @@
+---
+
+- name: ensure kafka requirements are installed
+  apt: 
+    pkg:
+      - openjdk-17-jre-headless
+      - acl
+    state: present
+  become: yes
+
+# ref: https://github.com/dragomirr/ansible-role-kafka
+# ref: https://galaxy.ansible.com/ui/standalone/roles/dragomirr/kafka/install/
+- name: setup KRaft kafka cluster using ansible galaxy role
+  role: dragomirr.kafka
+     # setting kafka_node_id in play is only valid if you have 1 kafka node
+     # if you have multiple kafka nodes you need to set unique kafka_node_id for each node
+     kafka_node_id: "{{ 100 | random(seed=inventory_hostname) }}"
+     kafka_heap_size: 2G
+     kafka_install_dependencies: true
+     kafka_topics:
+       - name: tvheadend-finished
+       - name: video/finished
+       - name: video/manualcrop
+       - name: video/rkmppenc
+    # adding config that is not defined by role
+    kafka_additional_config:
+      message.max.bytes: 100000
+    # adding kafka startup options
+    kafka_opts:
+      - -XX:NewSize=256m
