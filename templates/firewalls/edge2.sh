@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Sep 20 16:23:12 2025 AEST by acas
+#  Generated Sat Sep 20 16:31:52 2025 AEST by acas
 #
 # files: * edge2.fw /etc/fw/edge2.fw
 #
@@ -431,7 +431,7 @@ script_body() {
     $IPTABLES -A Cid7143X458401.0 -p icmp  -m icmp  --icmp-type 0/0   -j ACCEPT
     $IPTABLES -A Cid7143X458401.0 -p icmp  -m icmp  --icmp-type 11/0   -j ACCEPT
     $IPTABLES -A Cid7143X458401.0 -p icmp  -m icmp  --icmp-type 11/1   -j ACCEPT
-    $IPTABLES -A Cid7143X458401.0 -p tcp -m tcp  --dport 53  -j ACCEPT
+    $IPTABLES -A Cid7143X458401.0 -p tcp -m tcp  -m multiport  --dports 53,3128  -j ACCEPT
     $IPTABLES -A Cid7143X458401.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
     # Rule 7 (global)
@@ -509,7 +509,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Sep 20 16:23:12 2025 by acas"
+        log "Activating firewall script generated Sat Sep 20 16:31:52 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
