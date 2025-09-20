@@ -67,7 +67,7 @@
 - name: install hardware accel driver and firmware using user-specified config
   block:
     - command: wget -O /tmp/libmali.deb {{mali_url}}
-    - command: dpkg -i /tmp/libmali.deb
+    - command: dpkg --force-confold -i /tmp/libmali.deb
     - file: state=absent path=/tmp/libmali.deb
 
 - name: if force requested, ensure that all packages are re-installed at latest available versions
