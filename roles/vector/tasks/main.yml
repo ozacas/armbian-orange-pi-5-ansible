@@ -1,0 +1,11 @@
+
+---
+
+
+- name: disable rsyslog when requested
+  include_tasks: "disable_rsyslog.yml"
+  when:
+    - "not (rsyslog|default(False)|bool)"
+
+- name: setup vector from DataDog to ingest all logs/metrics
+  include_tasks: "vector.yml"

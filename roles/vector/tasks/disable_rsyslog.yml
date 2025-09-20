@@ -1,0 +1,8 @@
+---
+
+- name: rsyslog service and socket is switched off
+  systemd: name={{item}} state=stopped enabled=no masked=yes
+  become: yes
+  with_items:
+    - "rsyslog.service"
+    - "syslog.socket"

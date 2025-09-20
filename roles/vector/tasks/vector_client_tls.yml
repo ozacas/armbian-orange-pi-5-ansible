@@ -1,0 +1,27 @@
+---
+
+- name: issue new cert for client using vault CLI
+  delegate_to: localhost
+  command: vault write -format=json {{ca|default('intca')}}/issue/{{vector_role|default('logs')}} common_name="{{inventory_hostname}}.logs.lan" ttl="3000d"
+  become: no 
+  register: tls_results
+
+- debug: var=tls_results
+
+- name: convert to fact
+  set_fact:
+    pki: "{{ tls_results.stdout|from_json}}"
+
+- debug: var=pki
+
+- name: ensure TLS folder exists in vector config directory
+  file: state=directory path=/etc/vector/tls mode="0750" owner=vector group=vector
+  become: yes
+
+- name: push PKI to target host
+  template: src={{item.src}} dest={{item.dest}} force=yes backup=no mode={{item.mode|default('0644')}} owner=vector group=vector
+  become: yes
+  with_items:
+    - { "src": "templates/cert.pem.j2",    "dest": "/etc/vector/tls/cert.pem" }
+    - { "src": "templates/private.pem.j2", "dest": "/etc/vector/tls/private.pem", "mode": "0400" }
+    - { "src": "templates/ca.pem.j2",      "dest": "/etc/vector/tls/ca.pem" }

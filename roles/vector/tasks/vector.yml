@@ -1,0 +1,32 @@
+---
+
+- name: install apt repo using copy of external site's script
+  copy: remote_src=no src=files/vector.setup.bash dest=/tmp/vector.setup.bash mode=0750
+ 
+- name: run setup script to add keys, repos and update cache
+  command: /tmp/vector.setup.bash
+  become: yes
+
+- name: install vector apt package
+  apt: name=vector state=present 
+  become: yes 
+
+- name: check to see if client tls exists
+  stat: path=/etc/vector/tls/cert.pem
+  register: client_tls
+  become: yes
+
+- name: install TLS for each client via vault, iff not already present
+  include_tasks: "vector_client_tls.yml" 
+  when:
+    - not client_tls.stat.exists
+
+- name: install and activate required config for homelab
+  block:
+    - template: src=templates/vector.yaml.j2 dest=/etc/vector/vector.yaml owner=vector group=vector mode=0755 force=yes backup=no
+      become: yes
+      register: vector_config_results
+    - systemd: name=vector state=restarted daemon_reload=yes
+      become: yes
+      when:
+        - "vector_config_results is changed"

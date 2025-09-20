@@ -42,6 +42,7 @@
     - set-timezone
     - sysctl
     - dns-resolver
+    - vector
     - firewall  # assumes firewall rules dont break DNS resolution or ssh...
     - user-ssh-authorized-key
     - extra-software

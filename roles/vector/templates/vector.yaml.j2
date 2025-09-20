@@ -1,0 +1,80 @@
+#                                    __   __  __
+#                                    \ \ / / / /
+#                                     \ V / / /
+#                                      \_/  \/
+#
+#                                    V E C T O R
+#                                   Configuration
+#
+# ------------------------------------------------------------------------------
+# Website: https://vector.dev
+# Docs: https://vector.dev/docs
+# Chat: https://chat.vector.dev
+# ------------------------------------------------------------------------------
+
+# Change this to use a non-default directory for Vector data storage:
+data_dir: "/var/lib/vector"
+
+# Random Syslog-formatted logs
+sources:
+  # local sources
+  vector_logs:
+    type: internal_logs
+
+  systemd_journal_log:
+    type: journald
+
+{% if inventory_hostname == "opi" %}
+  # remote boxes logs
+  aggregator:
+    type: vector
+    address: 192.168.2.146:10514
+    tls:
+      ca_file: /etc/vector/tls/ca.pem
+      crt_file: /etc/vector/tls/cert.pem
+      key_file: /etc/vector/tls/private.pem 
+      verify_certificate: true
+{% endif %}
+
+# Parse Syslog logs
+# See the Vector Remap Language reference for more info: https://vrl.dev
+transforms:
+  parsed_logs:
+    type: "remap"
+    inputs: ["systemd_journal_log"]
+    source: |
+      ., err = parse_syslog(string!(.message)) ?? 
+            parse_json(string!(.message)) ?? 
+            parse_common_log(string!(.message)) 
+
+# Print parsed logs to stdout
+sinks:
+{% if inventory_hostname == "opi" %}
+  elasticsearch:
+    type: "elasticsearch"
+    inputs: ["parsed_logs", "aggregator", "vector_logs"]
+    endpoints:
+      - "https://{{es_user|default('elastic')}}:{{es_password}}@127.0.0.1:9200"
+    mode: bulk
+    tls:
+      verify_certificate: false
+      verify_hostname: false
+    bulk:
+      index: "vector-logs-%Y-%m-%d"
+{% else %}
+  vector:
+    type: vector
+    inputs: ["parsed_logs", "vector_logs"]
+    address: opi.lan:10514
+    tls:
+      ca_file: /etc/vector/tls/ca.pem
+      crt_file: /etc/vector/tls/cert.pem
+      key_file: /etc/vector/tls/private.pem 
+{% endif %}
+
+# Vector's GraphQL API (disabled by default)
+# Uncomment to try it out with the `vector top` command or
+# in your browser at http://localhost:8686
+api:
+  enabled: true
+  address: "127.0.0.1:8686"

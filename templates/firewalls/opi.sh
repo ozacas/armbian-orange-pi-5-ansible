@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Jul 26 16:20:57 2025 AEST by acas
+#  Generated Sat Sep 20 14:52:45 2025 AEST by acas
 #
 # files: * opi.fw /etc/fw/opi.fw
 #
@@ -431,10 +431,10 @@ script_body() {
     # 
     $IPTABLES -w -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --sport 9092:9202  --dport 9092:9093  -m conntrack --ctstate NEW  -j ACCEPT
     $IPTABLES -w -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
-    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A INPUT -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,10514,55000  -m conntrack --ctstate NEW  -j ACCEPT
     $IPTABLES -w -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --sport 9092:9202  --dport 9092:9093  -m conntrack --ctstate NEW  -j ACCEPT
     $IPTABLES -w -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 1514:1515  -m conntrack --ctstate NEW  -j ACCEPT
-    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,55000  -m conntrack --ctstate NEW  -j ACCEPT
+    $IPTABLES -w -A FORWARD -p tcp -m tcp  -m multiport  -s 192.168.2.0/24   --dports 5601,10514,55000  -m conntrack --ctstate NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
@@ -535,7 +535,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Jul 26 16:20:57 2025 by acas"
+        log "Activating firewall script generated Sat Sep 20 14:52:45 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

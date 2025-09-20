@@ -62,8 +62,9 @@ edge
 #[kodi]
 #t6 kodi_flatpak=yes
 
-[wazuh_manager]
-opi
+# disabled to prevent further changes to deployment
+#[wazuh_manager]
+#opi
 
 # hashicorp vault nodes - must be at least 3 for a RAFT cluster
 # NOW DISABLED SINCE WILL DESTROY EXISTING VAULT
@@ -98,6 +99,9 @@ normal_user=acas
 extra_software=["vim", "armbian-config", "dnsutils", "bind9-host", "net-tools", "git", "nvme-cli", "python3-pip", "btop"]
 ip_forwarding=no
 ipv6=yes
+
+# dont use rsyslog anymore - default ubuntu - instead install vector
+rsyslog=no
 
 # only this is supported for now (set to 'none' to do nothing to time setup on a given host)
 timesync_method=chrony
