@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Sep 13 13:47:11 2025 AEST by acas
+#  Generated Sat Sep 20 18:52:21 2025 AEST by acas
 #
 # files: * t6.fw /etc/t6.fw
 #
@@ -436,22 +436,28 @@ script_body() {
     # 
     echo "Rule 3 (global)"
     # 
-    # permit connectivity from t6 to key internal LAN services
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.146   --dport 10514  -m state --state NEW  -j ACCEPT
     # 
     # Rule 4 (global)
     # 
     echo "Rule 4 (global)"
     # 
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.136   --dport 9981:9982  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.136   --dports 8096,8883,2049  -m state --state NEW  -j ACCEPT
-    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.136   --dport 2049  -m state --state NEW  -j ACCEPT
+    # permit connectivity from t6 to key internal LAN services
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A INPUT -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A FORWARD -p tcp -m tcp  -m multiport  --dports 80,443,22  -m state --state NEW  -j ACCEPT
     # 
     # Rule 5 (global)
     # 
     echo "Rule 5 (global)"
+    # 
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.136   --dport 9981:9982  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -m multiport  -d 192.168.2.136   --dports 8096,8883,2049  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p udp -m udp  -d 192.168.2.136   --dport 2049  -m state --state NEW  -j ACCEPT
+    # 
+    # Rule 6 (global)
+    # 
+    echo "Rule 6 (global)"
     # 
     $IPTABLES -A INPUT -p tcp -m tcp  -s 127.0.0.1   -d 127.0.0.1   --dport 2049  -m state --state NEW  -j ACCEPT
     $IPTABLES -A INPUT -p udp -m udp  -s 127.0.0.1   -d 127.0.0.1   --dport 2049  -m state --state NEW  -j ACCEPT
@@ -464,9 +470,9 @@ script_body() {
     $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.159   -d 192.168.2.159   --dport 2049  -m state --state NEW  -j ACCEPT
     $IPTABLES -A FORWARD -p udp -m udp  -s 192.168.2.159   -d 192.168.2.159   --dport 2049  -m state --state NEW  -j ACCEPT
     # 
-    # Rule 6 (global)
+    # Rule 7 (global)
     # 
-    echo "Rule 6 (global)"
+    echo "Rule 7 (global)"
     # 
     $IPTABLES -N Cid7588X794954.0
     $IPTABLES -A INPUT -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j Cid7588X794954.0
@@ -480,9 +486,9 @@ script_body() {
     done
     $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 8200:8300  -m state --state NEW  -j ACCEPT
     # 
-    # Rule 7 (global)
+    # Rule 8 (global)
     # 
-    echo "Rule 7 (global)"
+    echo "Rule 8 (global)"
     # 
     $IPTABLES -N Cid6330X2280494.0
     $IPTABLES -A OUTPUT  -d 192.168.2.1   -m state --state NEW  -j Cid6330X2280494.0
@@ -493,9 +499,9 @@ script_body() {
     $IPTABLES -A Cid6330X2280494.0 -p tcp -m tcp  -m multiport  --dports 53,3128  -j ACCEPT
     $IPTABLES -A Cid6330X2280494.0 -p udp -m udp  -m multiport  --dports 68,67,53,123  -j ACCEPT
     # 
-    # Rule 8 (global)
+    # Rule 9 (global)
     # 
-    echo "Rule 8 (global)"
+    echo "Rule 9 (global)"
     # 
     $IPTABLES -N Cid6386X2103338.0
     $IPTABLES -A INPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j Cid6386X2103338.0
@@ -509,24 +515,24 @@ script_body() {
     done
     $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j ACCEPT
     # 
-    # Rule 9 (global)
+    # Rule 10 (global)
     # 
-    echo "Rule 9 (global)"
+    echo "Rule 10 (global)"
     # 
     # accept vault traffic for firewalled lan and also cluster node comms between vault nodes (also originating from the lan)
     $IPTABLES -A INPUT -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
     $IPTABLES -A FORWARD -p tcp -m tcp  -s 192.168.2.0/24   --dport 8200:8300  -m state --state NEW  -j ACCEPT
     # 
-    # Rule 10 (global)
+    # Rule 11 (global)
     # 
-    echo "Rule 10 (global)"
+    echo "Rule 11 (global)"
     # 
-    $IPTABLES -N RULE_10
-    $IPTABLES -A OUTPUT  -j RULE_10
-    $IPTABLES -A INPUT  -j RULE_10
-    $IPTABLES -A FORWARD  -j RULE_10
-    $IPTABLES -A RULE_10  -j LOG  --log-level info --log-prefix "RULE 10 -- DENY "
-    $IPTABLES -A RULE_10  -j DROP
+    $IPTABLES -N RULE_11
+    $IPTABLES -A OUTPUT  -j RULE_11
+    $IPTABLES -A INPUT  -j RULE_11
+    $IPTABLES -A FORWARD  -j RULE_11
+    $IPTABLES -A RULE_11  -j LOG  --log-level info --log-prefix "RULE 11 -- DENY "
+    $IPTABLES -A RULE_11  -j DROP
 }
 
 ip_forward() {
@@ -583,7 +589,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Sep 13 13:47:11 2025 by acas"
+        log "Activating firewall script generated Sat Sep 20 18:52:21 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
