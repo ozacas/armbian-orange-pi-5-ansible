@@ -1,0 +1,7 @@
+---
+
+- name: apply single role to entire fleet
+  hosts: all
+  roles:
+    - sbc-facts
+    - { "name": "{{ role|default('vector') }}" }

@@ -29,7 +29,7 @@
     - command: chown -R vector:vector /var/lib/vector
       ignore_errors: yes
       become: yes
-    - systemd: name=vector state=restarted daemon_reload=yes
+    - systemd: name=vector state=restarted masked=no enabled=yes daemon_reload=yes
       become: yes
       when:
         - "vector_config_results is changed"

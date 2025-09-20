@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Jul 26 16:20:58 2025 AEST by acas
+#  Generated Sun Sep 21 06:21:57 2025 AEST by acas
 #
 # files: * rock-5b-plus.fw /etc/fw/rock-5b-plus.fw
 #
@@ -455,17 +455,8 @@ script_body() {
     # 
     echo "Rule 5 (global)"
     # 
-    $IPTABLES -N Cid6515X2570525.0
-    $IPTABLES -A INPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j Cid6515X2570525.0
-    for i_wlP2p33s0 in $i_wlP2p33s0_list
-    do
-    test -n "$i_wlP2p33s0" && $IPTABLES -A Cid6515X2570525.0  -s $i_wlP2p33s0   -j ACCEPT 
-    done
-    for i_enP4p65s0 in $i_enP4p65s0_list
-    do
-    test -n "$i_enP4p65s0" && $IPTABLES -A Cid6515X2570525.0  -s $i_enP4p65s0   -j ACCEPT 
-    done
-    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.146   --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.146   --dport 10514  -m state --state NEW  -j ACCEPT
     # 
     # Rule 6 (global)
     # 
@@ -551,7 +542,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Jul 26 16:20:58 2025 by acas"
+        log "Activating firewall script generated Sun Sep 21 06:21:57 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files

@@ -4,7 +4,7 @@
 #
 #  Firewall Builder  fwb_ipt v5.3.7
 #
-#  Generated Sat Jul 26 16:20:58 2025 AEST by acas
+#  Generated Sat Sep 20 19:03:08 2025 AEST by acas
 #
 # files: * opi2.fw /etc/fw/opi2.fw
 #
@@ -421,11 +421,8 @@ script_body() {
     # 
     echo "Rule 5 (global)"
     # 
-    for i_enP4p65s0 in $i_enP4p65s0_list
-    do
-    test -n "$i_enP4p65s0" && $IPTABLES -A INPUT -p tcp -m tcp  -s $i_enP4p65s0   --dport 1514:1515  -m state --state NEW  -j ACCEPT 
-    done
-    $IPTABLES -A OUTPUT -p tcp -m tcp  --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.146   --dport 1514:1515  -m state --state NEW  -j ACCEPT
+    $IPTABLES -A OUTPUT -p tcp -m tcp  -d 192.168.2.146   --dport 10514  -m state --state NEW  -j ACCEPT
     # 
     # Rule 6 (global)
     # 
@@ -504,7 +501,7 @@ test -z "$cmd" && {
 
 case "$cmd" in
     start)
-        log "Activating firewall script generated Sat Jul 26 16:20:58 2025 by acas"
+        log "Activating firewall script generated Sat Sep 20 19:03:08 2025 by acas"
         check_tools
          prolog_commands 
         check_run_time_address_table_files
