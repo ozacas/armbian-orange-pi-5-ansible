@@ -6,13 +6,13 @@
   become: no 
   register: tls_results
 
-- debug: var=tls_results
+#- debug: var=tls_results
 
 - name: convert to fact
   set_fact:
     pki: "{{ tls_results.stdout|from_json}}"
 
-- debug: var=pki
+#- debug: var=pki
 
 - name: ensure TLS folder exists in vector config directory
   file: state=directory path=/etc/vector/tls mode="0750" owner=vector group=vector
