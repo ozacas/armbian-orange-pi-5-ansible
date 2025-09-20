@@ -115,7 +115,7 @@
 - hosts: desktops kodi
   become: yes
   roles:
-    - hdmi-audio-dts-a52
+#    - hdmi-audio-dts-a52
     - kodi 
 
 - hosts: lg

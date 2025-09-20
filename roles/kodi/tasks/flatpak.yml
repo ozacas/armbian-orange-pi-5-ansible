@@ -1,9 +1,8 @@
 ---
 
-- collections:
-    name: 
-      - community.general.flatpak
-      - community.general.flatpak_remote
+- name: ensure flatpak present
+  apt: state=present name=flatpak
+  become: yes
 
 - name: Add the flathub flatpak repository remote to the user installation
   community.general.flatpak_remote:
@@ -14,6 +13,6 @@
 
 - name: install kodi flatpak for ssh user
   community.general.flatpak:
-    name: fr.handbrake.ghb
-    state: latest
+    name: tv.kodi.Kodi
+    state: present
     method: user

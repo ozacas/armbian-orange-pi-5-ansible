@@ -26,6 +26,9 @@
     - template: src=templates/vector.yaml.j2 dest=/etc/vector/vector.yaml owner=vector group=vector mode=0755 force=yes backup=no
       become: yes
       register: vector_config_results
+    - command: chown -R vector:vector /var/lib/vector
+      ignore_errors: yes
+      become: yes
     - systemd: name=vector state=restarted daemon_reload=yes
       become: yes
       when:

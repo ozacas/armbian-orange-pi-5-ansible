@@ -1,3 +1,4 @@
+---
 #https://github.com/darealshinji/dcaenc
 #https://github.com/alsa-project/alsa-plugins
 #https://bbs.archlinux.org/viewtopic.php?id=251467&p=4
@@ -17,7 +18,7 @@
     state: latest
 
 - name: Clone alsa-plugins  repo
-  shell: git clone --branch v1.2.6 https://github.com/alsa-project/alsa-plugins.git
+  shell: git clone --branch v1.2.12 https://github.com/alsa-project/alsa-plugins.git
   args: 
       creates: /root/alsa-plugins
       chdir: /root
